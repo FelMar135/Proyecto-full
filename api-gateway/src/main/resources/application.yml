@@ -1,0 +1,48 @@
+server:
+  port: 9090
+
+spring:
+  main:
+    web-application-type: reactive
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          secret-key: esta_es_mi_compleja_clave_secreta
+
+  cloud:
+    gateway:
+      routes:
+
+        - id: auth-service
+          uri: http://localhost:9094
+          predicates:
+            - Path=/auth/**
+
+        - id: user-service
+          uri: http://localhost:9091
+          predicates:
+            - Path=/usuarios/**
+
+        - id: carrito-service
+          uri: http://localhost:9092
+          predicates:
+            - Path=/carritos/**
+
+        - id: producto-service
+          uri: http://localhost:9093
+          predicates:
+            - Path=/categorias/**
+
+        - id: producto-service-gpus
+          uri: http://localhost:9093
+          predicates:
+            - Path=/gpus/**
+        
+        - id: orden-service
+          uri: http://localhost:9095
+          predicates:
+            - Path=/ordenes/**
+
+        
