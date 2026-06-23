@@ -1,6 +1,6 @@
--- liquibase formatted sql
+--liquibase formatted sql
 
--- changeset 1
+--changeset march:1
 CREATE TABLE soporte (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     usuario_id BIGINT NOT NULL,
@@ -11,7 +11,7 @@ CREATE TABLE soporte (
     fecha_creacion DATE
 );
 
--- changeset 2
+--changeset march:2
 INSERT INTO soporte (usuario_id, orden_id, asunto, descripcion, estado, fecha_creacion) VALUES
 (1, 501, 'Retraso en el envío', 'Mi orden debió llegar ayer según el rastreo, pero aún no aparece. ¿Me pueden ayudar?', 'ABIERTO', '2026-06-20'),
 (2, 502, 'Problema de temperatura', 'La GPU que compré ayer alcanza los 90 grados jugando en 1080p. ¿Es normal o aplico garantía?', 'EN_PROGRESO', '2026-06-21'),
@@ -23,5 +23,3 @@ INSERT INTO soporte (usuario_id, orden_id, asunto, descripcion, estado, fecha_cr
 (7, 506, 'Producto equivocado', 'Pedí una gráfica de la marca ASUS y me llegó una de Gigabyte.', 'ABIERTO', '2026-06-23'),
 (8, 507, 'Drivers no instalan', 'Windows no reconoce la tarjeta de video, ya intenté descargar los drivers de la página oficial.', 'EN_PROGRESO', '2026-06-22'),
 (9, 508, 'Cancelación de orden', 'Me arrepentí de la compra, quiero cancelar mi pedido antes de que lo envíen.', 'CERRADO', '2026-06-19');
-
---ojo con el 501 de id orden
