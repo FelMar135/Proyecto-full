@@ -1,0 +1,162 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-envio-table
+      author: matias
+      changes:
+        - createTable:
+            tableName: envio
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              - column:
+                  name: orden_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: direccion_envio
+                  type: VARCHAR(150)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: comuna
+                  type: VARCHAR(80)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: ciudad
+                  type: VARCHAR(80)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: empresa_transportista
+                  type: VARCHAR(80)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: numero_seguimiento
+                  type: VARCHAR(80)
+
+              - column:
+                  name: estado
+                  type: VARCHAR(30)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: fecha_envio
+                  type: DATETIME
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: fecha_entrega_estimada
+                  type: DATETIME
+
+  - changeSet:
+      id: 002-insert-envios
+      author: matias
+      changes:
+        - insert:
+            tableName: envio
+            columns:
+              - column:
+                  name: orden_id
+                  valueNumeric: 1
+              - column:
+                  name: direccion_envio
+                  value: "Av. Providencia 1234"
+              - column:
+                  name: comuna
+                  value: "Providencia"
+              - column:
+                  name: ciudad
+                  value: "Santiago"
+              - column:
+                  name: empresa_transportista
+                  value: "Chilexpress"
+              - column:
+                  name: numero_seguimiento
+                  value: "CHX-1001"
+              - column:
+                  name: estado
+                  value: "EN_PREPARACION"
+              - column:
+                  name: fecha_envio
+                  valueDate: "2026-06-23T10:00:00"
+              - column:
+                  name: fecha_entrega_estimada
+                  valueDate: "2026-06-26T18:00:00"
+
+        - insert:
+            tableName: envio
+            columns:
+              - column:
+                  name: orden_id
+                  valueNumeric: 2
+              - column:
+                  name: direccion_envio
+                  value: "Los Leones 550"
+              - column:
+                  name: comuna
+                  value: "Ñuñoa"
+              - column:
+                  name: ciudad
+                  value: "Santiago"
+              - column:
+                  name: empresa_transportista
+                  value: "Starken"
+              - column:
+                  name: numero_seguimiento
+                  value: "STK-2002"
+              - column:
+                  name: estado
+                  value: "EN_TRANSITO"
+              - column:
+                  name: fecha_envio
+                  valueDate: "2026-06-22T09:30:00"
+              - column:
+                  name: fecha_entrega_estimada
+                  valueDate: "2026-06-25T18:00:00"
+
+        - insert:
+            tableName: envio
+            columns:
+              - column:
+                  name: orden_id
+                  valueNumeric: 3
+              - column:
+                  name: direccion_envio
+                  value: "Camino El Alba 890"
+              - column:
+                  name: comuna
+                  value: "Las Condes"
+              - column:
+                  name: ciudad
+                  value: "Santiago"
+              - column:
+                  name: empresa_transportista
+                  value: "Blue Express"
+              - column:
+                  name: numero_seguimiento
+                  value: "BLU-3003"
+              - column:
+                  name: estado
+                  value: "ENTREGADO"
+              - column:
+                  name: fecha_envio
+                  valueDate: "2026-06-20T11:15:00"
+              - column:
+                  name: fecha_entrega_estimada
+                  valueDate: "2026-06-23T18:00:00"
