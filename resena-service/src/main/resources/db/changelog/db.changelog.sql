@@ -1,6 +1,6 @@
--- liquibase formatted sql
+--liquibase formatted sql
 
--- changeset tu-nombre:01-crear-tabla-resena
+--changeset march:1
 CREATE TABLE resena (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     usuario_id BIGINT NOT NULL,
@@ -10,16 +10,15 @@ CREATE TABLE resena (
     fecha DATE
 );
 
--- changeset 2
-INSERT INTO resena (usuario_id, gpu_id, comentario, calificacion, fecha) VALUES
-(1, 101, 'Increíble rendimiento en 4K. La mejor GPU que he tenido.', 5, '2026-06-15'),
-(2, 105, 'Muy buena relación calidad-precio, ideal para 1080p.', 4, '2026-06-16'),
-(3, 102, 'Hace un poco de ruido bajo carga, pero rinde bien.', 4, '2026-06-17'),
-(4, 101, 'La tarjeta funciona 10/10, los FPS en juegos competitivos vuelan.', 5, '2026-06-18'),
-(5, 108, 'Tuve problemas con los drivers al principio, tuve que instalar versiones anteriores.', 3, '2026-06-19'),
-(1, 103, 'Excelente para renderizado 3D y edición de video.', 5, '2026-06-20'),
-(6, 105, 'Se calienta demasiado en mi gabinete, tuve que mejorar el flujo de aire.', 3, '2026-06-21'),
-(7, 110, 'No vale lo que cuesta, hay mejores opciones por este precio.', 2, '2026-06-21'),
-(8, 102, 'Funciona perfecto con mi fuente de 650W. Cero quejas.', 5, '2026-06-22'),
-(9, 104, 'Llegó con un defecto de fábrica en los ventiladores. Ya hablé con soporte.', 1, '2026-06-22');
--- ojo con el 101 de gpus
+--changeset march:3
+INSERT INTO resena (usuario_id, gpu_id, comentario, calificacion, fecha) VALUES 
+(3, 101, 'Una bestia para jugar en 4K. Corre todo en Ultra sin pestañear.', 5, '2026-06-01'),
+(4, 102, 'Rendimiento aceptable, pero los ventiladores suenan como turbina de avión.', 3, '2026-06-05'),
+(5, 103, 'Pésima experiencia. Me llegó defectuosa y da pantallazos azules.', 1, '2026-06-10'),
+(6, 104, 'Excelente calidad-precio. Perfecta para armar una PC gama media.', 4, '2026-06-12'),
+(7, 101, 'Ideal para renderizado 3D y edición de video pesada. Muy recomendada.', 5, '2026-06-15'),
+(8, 105, 'Se calienta demasiado rápido. Tuve que mejorar la ventilación de mi gabinete.', 2, '2026-06-18'),
+(9, 106, 'Diseño hermoso, luces RGB personalizables y rendimiento impecable.', 5, '2026-06-19'),
+(10, 107, 'Cumple bien, pero los drivers de esta marca siempre dan dolores de cabeza.', 3, '2026-06-20'),
+(2, 104, 'La mejor compra que he hecho este año, superó todas mis expectativas.', 5, '2026-06-21'),
+(1, 108, 'Es buena, pero por este precio esperaba un poco más de FPS en juegos recientes.', 4, '2026-06-22');
