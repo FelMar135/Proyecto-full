@@ -20,7 +20,7 @@ spring:
           predicates:
             - Path=/auth/**
 
-        - id: user-service
+        - id: usuario-service
           uri: http://localhost:9091
           predicates:
             - Path=/usuarios/**
@@ -30,7 +30,7 @@ spring:
           predicates:
             - Path=/carritos/**
 
-        - id: producto-service
+        - id: producto-service-categorias
           uri: http://localhost:9093
           predicates:
             - Path=/categorias/**
@@ -39,15 +39,23 @@ spring:
           uri: http://localhost:9093
           predicates:
             - Path=/gpus/**
-        
+
         - id: orden-service
           uri: http://localhost:9095
           predicates:
             - Path=/ordenes/**
-        
+
         - id: pago-service
           uri: http://localhost:9096
           predicates:
-            - Path=/pagos,/pagos/**
+            - Path=/pagos/**
 
-        
+        - id: resena-service
+          uri: http://localhost:9097
+          predicates:
+            - Path=/resenas/**
+
+        - id: boleta-service
+          uri: http://localhost:9098
+          predicates:
+            - Path=/boletas/**
