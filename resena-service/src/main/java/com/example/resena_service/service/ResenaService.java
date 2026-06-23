@@ -1,8 +1,11 @@
 package com.example.resena_service.service;
 
 import com.example.resena_service.dto.ResenaDTO;
+import com.example.resena_service.exception.BadRequestException;
+import com.example.resena_service.exception.ResourceNotFoundException;
 import com.example.resena_service.model.Resena;
 import com.example.resena_service.repository.ResenaRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -14,6 +17,12 @@ public class ResenaService {
 
     private final ResenaRepository resenaRepository;
     private final WebClient.Builder webClientBuilder;
+
+    @Value("${usuario.service.url}")
+    private String usuarioServiceUrl;
+
+    @Value("${producto.service.url}")
+    private String productoServiceUrl;
 
     public ResenaService(ResenaRepository resenaRepository, WebClient.Builder webClientBuilder) {
         this.resenaRepository = resenaRepository;
@@ -28,7 +37,8 @@ public class ResenaService {
 
     public ResenaDTO findById(Long id) {
         Resena resena = resenaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Reseña no encontrada con ID: " + id));
+                // AQUI: Usando ResourceNotFoundException
+                .orElseThrow(() -> new ResourceNotFoundException("Reseña no encontrada con ID: " + id));
         return ResenaDTO.fromModel(resena);
     }
 
@@ -37,38 +47,35 @@ public class ResenaService {
     }
 
     public ResenaDTO save(ResenaDTO dto) {
-        // 1. Validar si el usuario existe en user-service
         Boolean userExists = webClientBuilder.build()
                 .get()
-                .uri("http://user-service/usuarios/" + dto.getUsuarioId() + "/exists")
+                .uri(usuarioServiceUrl + "/usuarios/" + dto.getUsuarioId() + "/exists")
                 .retrieve()
                 .bodyToMono(Boolean.class)
                 .block();
 
-        // 2. Validar si la GPU existe en producto-service
         Boolean gpuExists = webClientBuilder.build()
                 .get()
-                .uri("http://producto-service/gpus/" + dto.getGpuId() + "/exists")
+                .uri(productoServiceUrl + "/gpus/" + dto.getGpuId() + "/exists")
                 .retrieve()
                 .bodyToMono(Boolean.class)
                 .block();
 
         if (Boolean.FALSE.equals(userExists) || Boolean.FALSE.equals(gpuExists)) {
-            throw new RuntimeException("Error: El usuario o la GPU no existen en la base de datos.");
+            // AQUI: Usando BadRequestException
+            throw new BadRequestException("Error: El usuario o la GPU no existen en la base de datos.");
         }
 
-        // 3. Convertir a Modelo, Guardar y retornar DTO
         Resena resena = dto.toModel();
         Resena resenaGuardada = resenaRepository.save(resena);
         return ResenaDTO.fromModel(resenaGuardada);
     }
 
     public ResenaDTO update(Long id, ResenaDTO dto) {
-        // Buscar la reseña original
         Resena existente = resenaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Reseña no encontrada con ID: " + id));
+                // AQUI: Usando ResourceNotFoundException
+                .orElseThrow(() -> new ResourceNotFoundException("Reseña no encontrada con ID: " + id));
 
-        // Actualizar solo los campos permitidos (usualmente no se cambia quién la escribió o a qué GPU pertenece)
         existente.setComentario(dto.getComentario());
         existente.setCalificacion(dto.getCalificacion());
         existente.setFecha(dto.getFecha());
@@ -79,7 +86,8 @@ public class ResenaService {
 
     public void deleteById(Long id) {
         if (!resenaRepository.existsById(id)) {
-            throw new RuntimeException("Reseña no encontrada con ID: " + id);
+            // AQUI: Usando ResourceNotFoundException
+            throw new ResourceNotFoundException("Reseña no encontrada con ID: " + id);
         }
         resenaRepository.deleteById(id);
     }
