@@ -1,6 +1,8 @@
 package com.example.soporte_service.service;
 
 import com.example.soporte_service.dto.SoporteDTO;
+import com.example.soporte_service.exception.BadRequestException;
+import com.example.soporte_service.exception.ResourceNotFoundException;
 import com.example.soporte_service.model.Soporte;
 import com.example.soporte_service.repository.SoporteRepository;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,7 +19,6 @@ public class SoporteService {
     private final SoporteRepository soporteRepository;
     private final WebClient.Builder webClientBuilder;
 
-    // Inyectamos las URLs desde el application.properties
     @Value("${usuario.service.url}")
     private String usuarioServiceUrl;
 
@@ -37,12 +38,12 @@ public class SoporteService {
 
     public SoporteDTO findById(Long id) {
         Soporte soporte = soporteRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Ticket de soporte no encontrado con ID: " + id));
+                // AQUI: Cambiado a ResourceNotFoundException
+                .orElseThrow(() -> new ResourceNotFoundException("Ticket de soporte no encontrado con ID: " + id));
         return SoporteDTO.fromModel(soporte);
     }
 
     public SoporteDTO save(SoporteDTO dto) {
-        // 1. Validar si el usuario existe usando WebClient
         Boolean userExists = webClientBuilder.build()
                 .get()
                 .uri(usuarioServiceUrl + "/usuarios/" + dto.getUsuarioId() + "/exists")
@@ -51,10 +52,10 @@ public class SoporteService {
                 .block();
 
         if (Boolean.FALSE.equals(userExists)) {
-            throw new RuntimeException("Error: El usuario indicado no existe.");
+            // AQUI: Cambiado a BadRequestException
+            throw new BadRequestException("Error: El usuario indicado no existe.");
         }
 
-        // 2. Validar si la orden existe (solo si el usuario mandó un ID de orden)
         if (dto.getOrdenId() != null) {
             Boolean ordenExists = webClientBuilder.build()
                     .get()
@@ -64,11 +65,11 @@ public class SoporteService {
                     .block();
 
             if (Boolean.FALSE.equals(ordenExists)) {
-                throw new RuntimeException("Error: La orden indicada no existe en la base de datos.");
+                // AQUI: Cambiado a BadRequestException
+                throw new BadRequestException("Error: La orden indicada no existe en la base de datos.");
             }
         }
 
-        // 3. Asignar valores por defecto para un ticket nuevo
         if (dto.getFechaCreacion() == null) {
             dto.setFechaCreacion(LocalDate.now());
         }
@@ -76,7 +77,6 @@ public class SoporteService {
             dto.setEstado("ABIERTO");
         }
 
-        // 4. Convertir a Modelo, Guardar y retornar DTO
         Soporte soporte = dto.toModel();
         Soporte soporteGuardado = soporteRepository.save(soporte);
         return SoporteDTO.fromModel(soporteGuardado);
@@ -84,9 +84,9 @@ public class SoporteService {
 
     public SoporteDTO update(Long id, SoporteDTO dto) {
         Soporte existente = soporteRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Ticket de soporte no encontrado con ID: " + id));
+                // AQUI: Cambiado a ResourceNotFoundException
+                .orElseThrow(() -> new ResourceNotFoundException("Ticket de soporte no encontrado con ID: " + id));
 
-        // Solo se actualizan campos editables (no se cambia el usuario, ni la orden, ni la fecha de creación)
         existente.setAsunto(dto.getAsunto());
         existente.setDescripcion(dto.getDescripcion());
         existente.setEstado(dto.getEstado());
@@ -97,7 +97,8 @@ public class SoporteService {
 
     public void deleteById(Long id) {
         if (!soporteRepository.existsById(id)) {
-            throw new RuntimeException("Ticket de soporte no encontrado con ID: " + id);
+            // AQUI: Cambiado a ResourceNotFoundException
+            throw new ResourceNotFoundException("Ticket de soporte no encontrado con ID: " + id);
         }
         soporteRepository.deleteById(id);
     }
