@@ -28,7 +28,13 @@ public class SecurityConfig {
         return http
                 .csrf(csrf -> csrf.disable())
                 .authorizeExchange(exchange -> exchange
-                        .pathMatchers("/auth/**").permitAll()
+                        .pathMatchers(
+                                "/auth/**",
+                                "/v3/api-docs/**",
+                                "/swagger-ui/**", //permitimos swagger
+                                "/swagger-ui.html",
+                                "/webjars/**"
+                        ).permitAll()
                         .anyExchange().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
