@@ -1,0 +1,106 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-pago-table
+      author: matias
+      changes:
+        - createTable:
+            tableName: pago
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              - column:
+                  name: orden_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: monto
+                  type: DECIMAL(12,2)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: metodo_pago
+                  type: VARCHAR(30)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: estado
+                  type: VARCHAR(30)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: fecha_pago
+                  type: DATETIME
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 002-insert-pagos
+      author: matias
+      changes:
+        - insert:
+            tableName: pago
+            columns:
+              - column:
+                  name: orden_id
+                  valueNumeric: 1
+              - column:
+                  name: monto
+                  valueNumeric: 250000
+              - column:
+                  name: metodo_pago
+                  value: DEBITO
+              - column:
+                  name: estado
+                  value: PAGADO
+              - column:
+                  name: fecha_pago
+                  valueDate: 2026-06-23T10:00:00
+
+        - insert:
+            tableName: pago
+            columns:
+              - column:
+                  name: orden_id
+                  valueNumeric: 2
+              - column:
+                  name: monto
+                  valueNumeric: 580000
+              - column:
+                  name: metodo_pago
+                  value: CREDITO
+              - column:
+                  name: estado
+                  value: PENDIENTE
+              - column:
+                  name: fecha_pago
+                  valueDate: 2026-06-23T11:00:00
+
+        - insert:
+            tableName: pago
+            columns:
+              - column:
+                  name: orden_id
+                  valueNumeric: 3
+              - column:
+                  name: monto
+                  valueNumeric: 120000
+              - column:
+                  name: metodo_pago
+                  value: TRANSFERENCIA
+              - column:
+                  name: estado
+                  value: RECHAZADO
+              - column:
+                  name: fecha_pago
+                  valueDate: 2026-06-23T12:00:00
