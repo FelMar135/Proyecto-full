@@ -1,8 +1,11 @@
 package com.example.boleta_service.controller;
 
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.example.boleta_service.assembler.BoletaModelAssembler;
 import com.example.boleta_service.dto.BoletaDTO;
 import com.example.boleta_service.model.Boleta;
 import com.example.boleta_service.service.BoletaService;
@@ -19,11 +22,17 @@ import java.util.stream.Collectors;
 @RequestMapping("/boletas")
 public class BoletaController {
 
+    
     private final BoletaService boletaService;
 
-    public BoletaController(BoletaService boletaService) {
-        this.boletaService = boletaService;
-    }
+    private final BoletaModelAssembler assembler;
+
+    public BoletaController(
+        BoletaService boletaService,
+        BoletaModelAssembler assembler) {
+            this.boletaService = boletaService;
+            this.assembler = assembler;
+}
 
     @Operation(summary = "Crear una nueva boleta")
     @PostMapping
@@ -40,28 +49,26 @@ public class BoletaController {
 
     @Operation(summary = "Listar todas las boletas")
     @GetMapping
-    public ResponseEntity<List<BoletaDTO>> listarBoletas() {
+    public ResponseEntity<CollectionModel<EntityModel<Boleta>>> listarBoletas() {   
 
-        List<Boleta> boletas = boletaService.listar();
+    List<EntityModel<Boleta>> boletas = boletaService.listar()
+            .stream()
+            .map(assembler::toModel)
+            .toList();
 
-        List<BoletaDTO> dtos = boletas.stream()
-                .map(BoletaDTO::fromModel)
-                .collect(Collectors.toList());
-
-        return ResponseEntity.ok(dtos);
+    return ResponseEntity.ok(CollectionModel.of(boletas));
     }
 
     @Operation(summary = "Buscar una boleta por su ID")
     @GetMapping("/{id}")
-    public ResponseEntity<BoletaDTO> buscarBoletaPorId(@PathVariable Long id) {
+    public ResponseEntity<EntityModel<Boleta>> buscarBoletaPorId(@PathVariable Long id) {
 
-        Boleta boleta = boletaService.buscarPorId(id);
+    Boleta boleta = boletaService.buscarPorId(id);
 
-        if (boleta == null) {
-            return ResponseEntity.notFound().build();
-        }
-
-        return ResponseEntity.ok(BoletaDTO.fromModel(boleta));
+    if (boleta == null) {
+        return ResponseEntity.notFound().build();
+    }
+    return ResponseEntity.ok(assembler.toModel(boleta));
     }
 
     @Operation(summary = "Verificar si una boleta existe por su ID")
@@ -103,32 +110,32 @@ public class BoletaController {
 
     @Operation(summary = "Buscar boletas por ID de usuario")
     @GetMapping("/usuario/{usuarioId}")
-    public ResponseEntity<List<BoletaDTO>> buscarPorUsuario(
-            @PathVariable Long usuarioId) {
+    public ResponseEntity<CollectionModel<EntityModel<Boleta>>> buscarPorUsuario(
+        @PathVariable Long usuarioId) {
 
-        List<Boleta> boletas =
-                boletaService.buscarPorUsuarioId(usuarioId);
+    List<EntityModel<Boleta>> boletas =
+            boletaService.buscarPorUsuarioId(usuarioId)
+                    .stream()
+                    .map(assembler::toModel)
+                    .toList();
 
-        List<BoletaDTO> dtos = boletas.stream()
-                .map(BoletaDTO::fromModel)
-                .collect(Collectors.toList());
-
-        return ResponseEntity.ok(dtos);
+    return ResponseEntity.ok(
+            CollectionModel.of(boletas));
     }
 
     @Operation(summary = "Buscar boletas por ID de orden")
     @GetMapping("/orden/{ordenId}")
-    public ResponseEntity<List<BoletaDTO>> buscarPorOrden(
+    public ResponseEntity<CollectionModel<EntityModel<Boleta>>> buscarPorOrden(
             @PathVariable Long ordenId) {
 
-        List<Boleta> boletas =
-                boletaService.buscarPorOrdenId(ordenId);
+        List<EntityModel<Boleta>> boletas =
+                boletaService.buscarPorOrdenId(ordenId)
+                        .stream()
+                        .map(assembler::toModel)
+                        .toList();
 
-        List<BoletaDTO> dtos = boletas.stream()
-                .map(BoletaDTO::fromModel)
-                .collect(Collectors.toList());
-
-        return ResponseEntity.ok(dtos);
+        return ResponseEntity.ok(
+                CollectionModel.of(boletas));
     }
 
     @Operation(summary = "Calcular el total comprado por un usuario")
