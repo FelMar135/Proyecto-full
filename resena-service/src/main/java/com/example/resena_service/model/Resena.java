@@ -1,4 +1,6 @@
-package com.example.carrito_service.model;
+package com.example.resena_service.model;
+
+import java.time.LocalDate;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -13,12 +15,14 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Carrito {
+public class Resena {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private Long usuarioId;
     private Long gpuId;
-    private Integer cantidad;
+    private String comentario;
+    private Integer calificacion;
+    private LocalDate fecha;
 }
