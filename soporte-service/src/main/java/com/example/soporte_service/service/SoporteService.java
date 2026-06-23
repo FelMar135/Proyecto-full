@@ -3,6 +3,7 @@ package com.example.soporte_service.service;
 import com.example.soporte_service.dto.SoporteDTO;
 import com.example.soporte_service.model.Soporte;
 import com.example.soporte_service.repository.SoporteRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -15,6 +16,13 @@ public class SoporteService {
 
     private final SoporteRepository soporteRepository;
     private final WebClient.Builder webClientBuilder;
+
+    // Inyectamos las URLs desde el application.properties
+    @Value("${usuario.service.url}")
+    private String usuarioServiceUrl;
+
+    @Value("${orden.service.url}")
+    private String ordenServiceUrl;
 
     public SoporteService(SoporteRepository soporteRepository, WebClient.Builder webClientBuilder) {
         this.soporteRepository = soporteRepository;
@@ -34,10 +42,10 @@ public class SoporteService {
     }
 
     public SoporteDTO save(SoporteDTO dto) {
-        // 1. Validar si el usuario existe en user-service
+        // 1. Validar si el usuario existe usando WebClient
         Boolean userExists = webClientBuilder.build()
                 .get()
-                .uri("http://user-service/usuarios/" + dto.getUsuarioId() + "/exists")
+                .uri(usuarioServiceUrl + "/usuarios/" + dto.getUsuarioId() + "/exists")
                 .retrieve()
                 .bodyToMono(Boolean.class)
                 .block();
@@ -46,11 +54,11 @@ public class SoporteService {
             throw new RuntimeException("Error: El usuario indicado no existe.");
         }
 
-        // 2. Validar si la orden existe (siempre y cuando se envíe un ordenId, ya que puede ser opcional)
+        // 2. Validar si la orden existe (solo si el usuario mandó un ID de orden)
         if (dto.getOrdenId() != null) {
             Boolean ordenExists = webClientBuilder.build()
                     .get()
-                    .uri("http://orden-service/ordenes/" + dto.getOrdenId() + "/exists")
+                    .uri(ordenServiceUrl + "/ordenes/" + dto.getOrdenId() + "/exists")
                     .retrieve()
                     .bodyToMono(Boolean.class)
                     .block();
@@ -60,7 +68,7 @@ public class SoporteService {
             }
         }
 
-        // 3. Asignar valores por defecto si vienen nulos
+        // 3. Asignar valores por defecto para un ticket nuevo
         if (dto.getFechaCreacion() == null) {
             dto.setFechaCreacion(LocalDate.now());
         }
@@ -75,12 +83,10 @@ public class SoporteService {
     }
 
     public SoporteDTO update(Long id, SoporteDTO dto) {
-        // Buscar el ticket original
         Soporte existente = soporteRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Ticket de soporte no encontrado con ID: " + id));
 
-        // Actualizar solo los campos que tienen sentido editar (asunto, descripción y estado)
-        // No se debe cambiar el usuarioId ni la fecha de creación
+        // Solo se actualizan campos editables (no se cambia el usuario, ni la orden, ni la fecha de creación)
         existente.setAsunto(dto.getAsunto());
         existente.setDescripcion(dto.getDescripcion());
         existente.setEstado(dto.getEstado());
