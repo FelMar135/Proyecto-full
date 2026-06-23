@@ -1,7 +1,10 @@
 package com.example.pago_service.controller;
 
+import com.example.pago_service.assembler.PagoModelAssembler;
 import com.example.pago_service.dto.PagoDTO;
 import com.example.pago_service.service.PagoService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,39 +22,44 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 @RequestMapping("/pagos")
 @RequiredArgsConstructor
 @Slf4j
+@Tag(name = "Pagos", description = "Operaciones CRUD para gestionar pagos de órdenes")
 public class PagoController {
 
     private final PagoService pagoService;
+    private final PagoModelAssembler pagoModelAssembler;
 
     @GetMapping
+    @Operation(summary = "Obtener todos los pagos")
     public ResponseEntity<CollectionModel<EntityModel<PagoDTO>>> obtenerTodos() {
-        log.info("GET /pagos - Solicitud para obtener todos los pagos");
+        log.info("GET /pagos - Obteniendo todos los pagos");
 
         List<EntityModel<PagoDTO>> pagos = pagoService.obtenerTodos()
                 .stream()
-                .map(this::agregarLinks)
+                .map(pagoModelAssembler::toModel)
                 .toList();
 
-        CollectionModel<EntityModel<PagoDTO>> collectionModel = CollectionModel.of(
+        CollectionModel<EntityModel<PagoDTO>> response = CollectionModel.of(
                 pagos,
                 linkTo(methodOn(PagoController.class).obtenerTodos()).withSelfRel()
         );
 
-        return ResponseEntity.ok(collectionModel);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{id}")
+    @Operation(summary = "Obtener un pago por ID")
     public ResponseEntity<EntityModel<PagoDTO>> obtenerPorId(@PathVariable Long id) {
-        log.info("GET /pagos/{} - Solicitud para obtener pago por ID", id);
+        log.info("GET /pagos/{} - Obteniendo pago por ID", id);
 
         PagoDTO pagoDTO = pagoService.obtenerPorId(id);
 
-        return ResponseEntity.ok(agregarLinks(pagoDTO));
+        return ResponseEntity.ok(pagoModelAssembler.toModel(pagoDTO));
     }
 
     @GetMapping("/{id}/exists")
+    @Operation(summary = "Validar si existe un pago por ID")
     public ResponseEntity<Boolean> existePorId(@PathVariable Long id) {
-        log.info("GET /pagos/{}/exists - Solicitud para validar existencia de pago", id);
+        log.info("GET /pagos/{}/exists - Validando existencia del pago", id);
 
         boolean existe = pagoService.existePorId(id);
 
@@ -59,26 +67,28 @@ public class PagoController {
     }
 
     @GetMapping("/orden/{ordenId}")
+    @Operation(summary = "Obtener pagos asociados a una orden")
     public ResponseEntity<CollectionModel<EntityModel<PagoDTO>>> obtenerPorOrdenId(@PathVariable Long ordenId) {
-        log.info("GET /pagos/orden/{} - Solicitud para obtener pagos por orden", ordenId);
+        log.info("GET /pagos/orden/{} - Obteniendo pagos por orden", ordenId);
 
         List<EntityModel<PagoDTO>> pagos = pagoService.obtenerPorOrdenId(ordenId)
                 .stream()
-                .map(this::agregarLinks)
+                .map(pagoModelAssembler::toModel)
                 .toList();
 
-        CollectionModel<EntityModel<PagoDTO>> collectionModel = CollectionModel.of(
+        CollectionModel<EntityModel<PagoDTO>> response = CollectionModel.of(
                 pagos,
                 linkTo(methodOn(PagoController.class).obtenerPorOrdenId(ordenId)).withSelfRel(),
                 linkTo(methodOn(PagoController.class).obtenerTodos()).withRel("todos-los-pagos")
         );
 
-        return ResponseEntity.ok(collectionModel);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping
+    @Operation(summary = "Crear un nuevo pago")
     public ResponseEntity<PagoDTO> crear(@Valid @RequestBody PagoDTO pagoDTO) {
-        log.info("POST /pagos - Solicitud para crear pago");
+        log.info("POST /pagos - Creando nuevo pago");
 
         PagoDTO pagoCreado = pagoService.crear(pagoDTO);
 
@@ -86,11 +96,12 @@ public class PagoController {
     }
 
     @PutMapping("/{id}")
+    @Operation(summary = "Actualizar un pago existente")
     public ResponseEntity<PagoDTO> actualizar(
             @PathVariable Long id,
             @Valid @RequestBody PagoDTO pagoDTO
     ) {
-        log.info("PUT /pagos/{} - Solicitud para actualizar pago", id);
+        log.info("PUT /pagos/{} - Actualizando pago", id);
 
         PagoDTO pagoActualizado = pagoService.actualizar(id, pagoDTO);
 
@@ -98,21 +109,12 @@ public class PagoController {
     }
 
     @DeleteMapping("/{id}")
+    @Operation(summary = "Eliminar un pago por ID")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
-        log.info("DELETE /pagos/{} - Solicitud para eliminar pago", id);
+        log.info("DELETE /pagos/{} - Eliminando pago", id);
 
         pagoService.eliminar(id);
 
         return ResponseEntity.noContent().build();
-    }
-
-    private EntityModel<PagoDTO> agregarLinks(PagoDTO pagoDTO) {
-        return EntityModel.of(
-                pagoDTO,
-                linkTo(methodOn(PagoController.class).obtenerPorId(pagoDTO.getId())).withSelfRel(),
-                linkTo(methodOn(PagoController.class).obtenerTodos()).withRel("todos-los-pagos"),
-                linkTo(methodOn(PagoController.class).obtenerPorOrdenId(pagoDTO.getOrdenId())).withRel("pagos-por-orden"),
-                linkTo(methodOn(PagoController.class).existePorId(pagoDTO.getId())).withRel("existe")
-        );
     }
 }
