@@ -2,7 +2,8 @@ package com.example.orden_service.service;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,7 +19,7 @@ public class OrdenService {
     private static final Logger logger = LoggerFactory.getLogger(OrdenService.class);
 
     private final OrdenRepository ordenRepository;
-    private final RestTemplate restTemplate;
+    private final WebClient.Builder webClientBuilder; // Reemplazamos RestTemplate
 
     @Value("${usuario.service.url}")
     private String usuarioServiceUrl;
@@ -26,29 +27,41 @@ public class OrdenService {
     @Value("${carrito.service.url}")
     private String carritoServiceUrl;
 
-    public OrdenService(OrdenRepository ordenRepository, RestTemplate restTemplate) {
+    public OrdenService(OrdenRepository ordenRepository, WebClient.Builder webClientBuilder) {
         this.ordenRepository = ordenRepository;
-        this.restTemplate = restTemplate;
+        this.webClientBuilder = webClientBuilder;
     }
 
     public Orden guardar(Orden orden) {
 
         logger.info("Intentando crear orden para usuario ID: {}", orden.getUsuarioId());
 
-        Boolean existeUsuario = restTemplate.getForObject(
-                usuarioServiceUrl + "/usuarios/" + orden.getUsuarioId() + "/exists",
-                Boolean.class
-        );
+        Boolean existeUsuario = null;
+        try {
+            existeUsuario = webClientBuilder.build().get()
+                    .uri(usuarioServiceUrl + "/usuarios/" + orden.getUsuarioId() + "/exists")
+                    .retrieve()
+                    .bodyToMono(Boolean.class)
+                    .block();
+        } catch (Exception e) {
+            logger.error("Error al conectar con usuario-service: {}", e.getMessage());
+        }
 
         if (existeUsuario == null || !existeUsuario) {
             logger.error("No se pudo crear la orden. Usuario no existe con ID: {}", orden.getUsuarioId());
             throw new RuntimeException("El usuario no existe");
         }
 
-        Boolean existeCarrito = restTemplate.getForObject(
-                carritoServiceUrl + "/carritos/" + orden.getCarritoId() + "/exists",
-                Boolean.class
-        );
+        Boolean existeCarrito = null;
+        try {
+            existeCarrito = webClientBuilder.build().get()
+                    .uri(carritoServiceUrl + "/carritos/" + orden.getCarritoId() + "/exists")
+                    .retrieve()
+                    .bodyToMono(Boolean.class)
+                    .block();
+        } catch (Exception e) {
+            logger.error("Error al conectar con carrito-service: {}", e.getMessage());
+        }
 
         if (existeCarrito == null || !existeCarrito) {
             logger.error("No se pudo crear la orden. Carrito no existe con ID: {}", orden.getCarritoId());
@@ -86,20 +99,32 @@ public class OrdenService {
             return null;
         }
 
-        Boolean existeUsuario = restTemplate.getForObject(
-                usuarioServiceUrl + "/usuarios/" + ordenActualizada.getUsuarioId() + "/exists",
-                Boolean.class
-        );
+        Boolean existeUsuario = null;
+        try {
+            existeUsuario = webClientBuilder.build().get()
+                    .uri(usuarioServiceUrl + "/usuarios/" + ordenActualizada.getUsuarioId() + "/exists")
+                    .retrieve()
+                    .bodyToMono(Boolean.class)
+                    .block();
+        } catch (Exception e) {
+            logger.error("Error al conectar con usuario-service: {}", e.getMessage());
+        }
 
         if (existeUsuario == null || !existeUsuario) {
             logger.error("No se pudo actualizar la orden. Usuario no existe con ID: {}", ordenActualizada.getUsuarioId());
             throw new RuntimeException("El usuario no existe");
         }
 
-        Boolean existeCarrito = restTemplate.getForObject(
-                carritoServiceUrl + "/carritos/" + ordenActualizada.getCarritoId() + "/exists",
-                Boolean.class
-        );
+        Boolean existeCarrito = null;
+        try {
+            existeCarrito = webClientBuilder.build().get()
+                    .uri(carritoServiceUrl + "/carritos/" + ordenActualizada.getCarritoId() + "/exists")
+                    .retrieve()
+                    .bodyToMono(Boolean.class)
+                    .block();
+        } catch (Exception e) {
+            logger.error("Error al conectar con carrito-service: {}", e.getMessage());
+        }
 
         if (existeCarrito == null || !existeCarrito) {
             logger.error("No se pudo actualizar la orden. Carrito no existe con ID: {}", ordenActualizada.getCarritoId());
