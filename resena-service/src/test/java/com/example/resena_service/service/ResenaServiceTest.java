@@ -6,12 +6,14 @@ import static org.mockito.Mockito.*;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 import com.example.resena_service.exception.ResourceNotFoundException;
 import com.example.resena_service.model.Resena;
 import com.example.resena_service.dto.ResenaDTO;
 import com.example.resena_service.repository.ResenaRepository;
+import com.github.javafaker.Faker;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,35 +30,49 @@ public class ResenaServiceTest {
     private WebClient.Builder webClientBuilder;
 
     private ResenaService resenaService;
+    
+    // 1. Declaramos Faker y nuestra reseña global de prueba
+    private Faker faker;
+    private Resena resenaPrueba;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+        
+        // Inicializamos Faker en español
+        faker = new Faker(new Locale("es"));
 
         resenaService = new ResenaService(
                 resenaRepository,
                 webClientBuilder);
+
+        // 2. Creamos la reseña con datos aleatorios de Faker
+        resenaPrueba = new Resena(
+                1L, // Mantenemos el ID 1L fijo para que los mocks sean más fáciles de leer
+                faker.number().numberBetween(1L, 100L), // usuarioId aleatorio
+                faker.number().numberBetween(100L, 500L), // gpuId aleatorio
+                faker.lorem().sentence(8), // Comentario aleatorio de 8 palabras
+                faker.number().numberBetween(1, 6), // Calificación aleatoria entre 1 y 5
+                LocalDate.now()
+        );
     }
 
     @Test
     void buscarResenaPorId() {
 
-        Resena resena = new Resena(
-                1L,
-                1L,
-                101L,
-                "Excelente gráfica",
-                5,
-                LocalDate.now());
-
+        // Usamos la resenaPrueba generada por Faker
         when(resenaRepository.findById(1L))
-                .thenReturn(Optional.of(resena));
+                .thenReturn(Optional.of(resenaPrueba));
 
         ResenaDTO resultado =
                 resenaService.findById(1L);
 
         assertNotNull(resultado);
         assertEquals(1L, resultado.getId());
+        
+        // Imprimimos en consola para ver el comentario falso generado
+        System.out.println("Comentario generado por Faker: " + resenaPrueba.getComentario());
+        System.out.println("Calificación: " + resenaPrueba.getCalificacion() + " estrellas");
     }
 
     @Test
@@ -66,7 +82,7 @@ public class ResenaServiceTest {
                 .thenReturn(Optional.empty());
 
         assertThrows(
-                ResourceNotFoundException.class, // O RuntimeException si no usas ResourceNotFoundException aquí
+                ResourceNotFoundException.class, // O RuntimeException según tu implementación
                 () -> resenaService.findById(99L));
     }
 
@@ -76,8 +92,6 @@ public class ResenaServiceTest {
         when(resenaRepository.existsById(1L))
                 .thenReturn(true);
 
-        // A diferencia de boleta que retorna un boolean, deleteById en spring suele ser void.
-        // Lo ejecutamos y luego verificamos que se llamó al repositorio.
         resenaService.deleteById(1L);
 
         verify(resenaRepository)
@@ -95,26 +109,20 @@ public class ResenaServiceTest {
                 () -> resenaService.deleteById(99L));
     }
 
-    // Adaptamos el método final para que sea equivalente al 'totalCompradoPorUsuario' de Boleta, 
-    // pero aplicado al contexto de Reseñas (buscar reseñas de un usuario).
     @Test
     void buscarResenasPorUsuarioId() {
 
-        Resena resena = new Resena(
-                1L,
-                1L,
-                101L,
-                "Excelente gráfica",
-                5,
-                LocalDate.now());
+        // Extraemos el usuarioId dinámico que Faker inventó
+        Long usuarioFalsoId = resenaPrueba.getUsuarioId();
 
-        when(resenaRepository.findByUsuarioId(1L))
-                .thenReturn(Arrays.asList(resena));
+        when(resenaRepository.findByUsuarioId(usuarioFalsoId))
+                .thenReturn(Arrays.asList(resenaPrueba));
 
         List<ResenaDTO> resultados =
-                resenaService.findByUsuarioId(1L);
+                resenaService.findByUsuarioId(usuarioFalsoId);
 
         assertFalse(resultados.isEmpty());
-        assertEquals(1L, resultados.get(0).getUsuarioId());
+        // Verificamos que el usuario de la respuesta coincida con el de Faker
+        assertEquals(usuarioFalsoId, resultados.get(0).getUsuarioId());
     }
 }
