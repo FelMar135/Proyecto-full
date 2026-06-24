@@ -1,7 +1,7 @@
 package com.example.pago_service.service;
 
 import com.example.pago_service.dto.PagoDTO;
-import com.example.pago_service.exception.BusinessException;
+import com.example.pago_service.exception.BadRequestException;
 import com.example.pago_service.exception.ResourceNotFoundException;
 import com.example.pago_service.model.Pago;
 import com.example.pago_service.repository.PagoRepository;
@@ -96,9 +96,13 @@ class PagoServiceTest {
     }
 
     @Test
-    void calcularIva_conMontoInvalido_deberiaLanzarBusinessException() {
-        assertThrows(BusinessException.class, () -> pagoService.calcularIva(0.0));
-        assertThrows(BusinessException.class, () -> pagoService.calcularIva(null));
+    void calcularIva_conMontoCero_deberiaLanzarBadRequestException() {
+        assertThrows(BadRequestException.class, () -> pagoService.calcularIva(0.0));
+    }
+
+    @Test
+    void calcularIva_conMontoNulo_deberiaLanzarBadRequestException() {
+        assertThrows(BadRequestException.class, () -> pagoService.calcularIva(null));
     }
 
     @Test

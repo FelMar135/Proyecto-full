@@ -1,8 +1,7 @@
 package com.example.pago_service.service;
 
 import com.example.pago_service.dto.PagoDTO;
-import com.example.pago_service.exception.BusinessException;
-import com.example.pago_service.exception.RemoteServiceException;
+import com.example.pago_service.exception.BadRequestException;
 import com.example.pago_service.exception.ResourceNotFoundException;
 import com.example.pago_service.model.Pago;
 import com.example.pago_service.repository.PagoRepository;
@@ -43,6 +42,7 @@ public class PagoService {
 
     public boolean existePorId(Long id) {
         log.info("Validando existencia de pago con ID: {}", id);
+
         return pagoRepository.existsById(id);
     }
 
@@ -106,7 +106,7 @@ public class PagoService {
 
     public Double calcularIva(Double monto) {
         if (monto == null || monto <= 0) {
-            throw new BusinessException("El monto debe ser mayor a 0 para calcular IVA");
+            throw new BadRequestException("El monto debe ser mayor a 0 para calcular IVA");
         }
 
         return monto * 0.19;
@@ -123,17 +123,20 @@ public class PagoService {
                     .block();
 
             if (!Boolean.TRUE.equals(existe)) {
-                throw new BusinessException("La orden con ID " + ordenId + " no existe");
+                throw new BadRequestException("La orden con ID " + ordenId + " no existe");
             }
 
         } catch (WebClientResponseException.NotFound ex) {
-            throw new BusinessException("La orden con ID " + ordenId + " no existe");
+            throw new BadRequestException("La orden con ID " + ordenId + " no existe");
 
         } catch (WebClientResponseException ex) {
-            throw new RemoteServiceException("Error al comunicarse con orden-service: " + ex.getMessage());
+            throw new BadRequestException("Error al comunicarse con orden-service: " + ex.getMessage());
+
+        } catch (BadRequestException ex) {
+            throw ex;
 
         } catch (Exception ex) {
-            throw new RemoteServiceException("No se pudo validar la orden en orden-service");
+            throw new BadRequestException("No se pudo validar la orden en orden-service");
         }
     }
 

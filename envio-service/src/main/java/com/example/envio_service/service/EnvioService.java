@@ -1,8 +1,7 @@
 package com.example.envio_service.service;
 
 import com.example.envio_service.dto.EnvioDTO;
-import com.example.envio_service.exception.BusinessException;
-import com.example.envio_service.exception.RemoteServiceException;
+import com.example.envio_service.exception.BadRequestException;
 import com.example.envio_service.exception.ResourceNotFoundException;
 import com.example.envio_service.model.Envio;
 import com.example.envio_service.repository.EnvioRepository;
@@ -85,21 +84,15 @@ public class EnvioService {
         envioExistente.setEmpresaTransportista(envioDTO.getEmpresaTransportista());
         envioExistente.setEstado(envioDTO.getEstado());
 
-        if (envioDTO.getNumeroSeguimiento() == null || envioDTO.getNumeroSeguimiento().isBlank()) {
-            envioExistente.setNumeroSeguimiento(envioExistente.getNumeroSeguimiento());
-        } else {
+        if (envioDTO.getNumeroSeguimiento() != null && !envioDTO.getNumeroSeguimiento().isBlank()) {
             envioExistente.setNumeroSeguimiento(envioDTO.getNumeroSeguimiento());
         }
 
-        if (envioDTO.getFechaEnvio() == null) {
-            envioExistente.setFechaEnvio(envioExistente.getFechaEnvio());
-        } else {
+        if (envioDTO.getFechaEnvio() != null) {
             envioExistente.setFechaEnvio(envioDTO.getFechaEnvio());
         }
 
-        if (envioDTO.getFechaEntregaEstimada() == null) {
-            envioExistente.setFechaEntregaEstimada(envioExistente.getFechaEntregaEstimada());
-        } else {
+        if (envioDTO.getFechaEntregaEstimada() != null) {
             envioExistente.setFechaEntregaEstimada(envioDTO.getFechaEntregaEstimada());
         }
 
@@ -156,20 +149,20 @@ public class EnvioService {
                     .block();
 
             if (!Boolean.TRUE.equals(existe)) {
-                throw new BusinessException("La orden con ID " + ordenId + " no existe");
+                throw new BadRequestException("La orden con ID " + ordenId + " no existe");
             }
 
         } catch (WebClientResponseException.NotFound ex) {
-            throw new BusinessException("La orden con ID " + ordenId + " no existe");
+            throw new BadRequestException("La orden con ID " + ordenId + " no existe");
 
         } catch (WebClientResponseException ex) {
-            throw new RemoteServiceException("Error al comunicarse con orden-service: " + ex.getMessage());
+            throw new BadRequestException("Error al comunicarse con orden-service: " + ex.getMessage());
 
-        } catch (BusinessException ex) {
+        } catch (BadRequestException ex) {
             throw ex;
 
         } catch (Exception ex) {
-            throw new RemoteServiceException("No se pudo validar la orden en orden-service");
+            throw new BadRequestException("No se pudo validar la orden en orden-service");
         }
     }
 
