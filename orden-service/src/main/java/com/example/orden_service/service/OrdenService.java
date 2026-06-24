@@ -1,25 +1,24 @@
 package com.example.orden_service.service;
 
+import com.example.orden_service.exception.BadRequestException;
+import com.example.orden_service.exception.ResourceNotFoundException;
+import com.example.orden_service.model.Orden;
+import com.example.orden_service.repository.OrdenRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.example.orden_service.model.Orden;
-import com.example.orden_service.repository.OrdenRepository;
 
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
+@Slf4j
 public class OrdenService {
 
-    private static final Logger logger = LoggerFactory.getLogger(OrdenService.class);
-
     private final OrdenRepository ordenRepository;
-    private final WebClient.Builder webClientBuilder; // Reemplazamos RestTemplate
+    private final WebClient.Builder webClientBuilder;
 
     @Value("${usuario.service.url}")
     private String usuarioServiceUrl;
@@ -27,143 +26,130 @@ public class OrdenService {
     @Value("${carrito.service.url}")
     private String carritoServiceUrl;
 
-    public OrdenService(OrdenRepository ordenRepository, WebClient.Builder webClientBuilder) {
-        this.ordenRepository = ordenRepository;
-        this.webClientBuilder = webClientBuilder;
-    }
-
     public Orden guardar(Orden orden) {
+        log.info("Creando orden para usuario ID: {}", orden.getUsuarioId());
 
-        logger.info("Intentando crear orden para usuario ID: {}", orden.getUsuarioId());
-
-        Boolean existeUsuario = null;
-        try {
-            existeUsuario = webClientBuilder.build().get()
-                    .uri(usuarioServiceUrl + "/usuarios/" + orden.getUsuarioId() + "/exists")
-                    .retrieve()
-                    .bodyToMono(Boolean.class)
-                    .block();
-        } catch (Exception e) {
-            logger.error("Error al conectar con usuario-service: {}", e.getMessage());
-        }
-
-        if (existeUsuario == null || !existeUsuario) {
-            logger.error("No se pudo crear la orden. Usuario no existe con ID: {}", orden.getUsuarioId());
-            throw new RuntimeException("El usuario no existe");
-        }
-
-        Boolean existeCarrito = null;
-        try {
-            existeCarrito = webClientBuilder.build().get()
-                    .uri(carritoServiceUrl + "/carritos/" + orden.getCarritoId() + "/exists")
-                    .retrieve()
-                    .bodyToMono(Boolean.class)
-                    .block();
-        } catch (Exception e) {
-            logger.error("Error al conectar con carrito-service: {}", e.getMessage());
-        }
-
-        if (existeCarrito == null || !existeCarrito) {
-            logger.error("No se pudo crear la orden. Carrito no existe con ID: {}", orden.getCarritoId());
-            throw new RuntimeException("El carrito no existe");
-        }
-
-        logger.info("Orden creada correctamente para usuario ID: {}", orden.getUsuarioId());
+        validarTotalOrden(orden.getTotal());
+        validarUsuarioExiste(orden.getUsuarioId());
+        validarCarritoExiste(orden.getCarritoId());
 
         return ordenRepository.save(orden);
     }
 
     public List<Orden> listar() {
-        logger.info("Listando todas las órdenes");
+        log.info("Listando todas las órdenes");
+
         return ordenRepository.findAll();
     }
 
     public Orden buscarPorId(Long id) {
-        logger.info("Buscando orden con ID: {}", id);
-        return ordenRepository.findById(id).orElse(null);
+        log.info("Buscando orden con ID: {}", id);
+
+        return ordenRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("No existe una orden con ID: " + id));
     }
 
     public boolean existePorId(Long id) {
-        logger.info("Verificando existencia de orden con ID: {}", id);
+        log.info("Verificando existencia de orden con ID: {}", id);
+
         return ordenRepository.existsById(id);
     }
 
     public Orden actualizar(Long id, Orden ordenActualizada) {
+        log.info("Actualizando orden con ID: {}", id);
 
-        logger.info("Intentando actualizar orden con ID: {}", id);
+        Orden ordenExistente = ordenRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("No existe una orden con ID: " + id));
 
-        Orden orden = ordenRepository.findById(id).orElse(null);
+        validarTotalOrden(ordenActualizada.getTotal());
+        validarUsuarioExiste(ordenActualizada.getUsuarioId());
+        validarCarritoExiste(ordenActualizada.getCarritoId());
 
-        if (orden == null) {
-            logger.warn("No se encontró orden con ID: {}", id);
-            return null;
-        }
+        ordenExistente.setUsuarioId(ordenActualizada.getUsuarioId());
+        ordenExistente.setCarritoId(ordenActualizada.getCarritoId());
+        ordenExistente.setTotal(ordenActualizada.getTotal());
+        ordenExistente.setEstado(ordenActualizada.getEstado());
 
-        Boolean existeUsuario = null;
-        try {
-            existeUsuario = webClientBuilder.build().get()
-                    .uri(usuarioServiceUrl + "/usuarios/" + ordenActualizada.getUsuarioId() + "/exists")
-                    .retrieve()
-                    .bodyToMono(Boolean.class)
-                    .block();
-        } catch (Exception e) {
-            logger.error("Error al conectar con usuario-service: {}", e.getMessage());
-        }
-
-        if (existeUsuario == null || !existeUsuario) {
-            logger.error("No se pudo actualizar la orden. Usuario no existe con ID: {}", ordenActualizada.getUsuarioId());
-            throw new RuntimeException("El usuario no existe");
-        }
-
-        Boolean existeCarrito = null;
-        try {
-            existeCarrito = webClientBuilder.build().get()
-                    .uri(carritoServiceUrl + "/carritos/" + ordenActualizada.getCarritoId() + "/exists")
-                    .retrieve()
-                    .bodyToMono(Boolean.class)
-                    .block();
-        } catch (Exception e) {
-            logger.error("Error al conectar con carrito-service: {}", e.getMessage());
-        }
-
-        if (existeCarrito == null || !existeCarrito) {
-            logger.error("No se pudo actualizar la orden. Carrito no existe con ID: {}", ordenActualizada.getCarritoId());
-            throw new RuntimeException("El carrito no existe");
-        }
-
-        orden.setUsuarioId(ordenActualizada.getUsuarioId());
-        orden.setCarritoId(ordenActualizada.getCarritoId());
-        orden.setTotal(ordenActualizada.getTotal());
-        orden.setEstado(ordenActualizada.getEstado());
-
-        logger.info("Orden actualizada correctamente con ID: {}", id);
-
-        return ordenRepository.save(orden);
+        return ordenRepository.save(ordenExistente);
     }
 
-    public boolean eliminar(Long id) {
-
-        logger.warn("Intentando eliminar orden con ID: {}", id);
+    public void eliminar(Long id) {
+        log.info("Eliminando orden con ID: {}", id);
 
         if (!ordenRepository.existsById(id)) {
-            logger.error("No se pudo eliminar. Orden no encontrada con ID: {}", id);
-            return false;
+            throw new ResourceNotFoundException("No existe una orden con ID: " + id);
         }
 
         ordenRepository.deleteById(id);
-
-        logger.info("Orden eliminada correctamente con ID: {}", id);
-
-        return true;
     }
 
     public List<Orden> buscarPorUsuarioId(Long usuarioId) {
-        logger.info("Buscando órdenes del usuario ID: {}", usuarioId);
+        log.info("Buscando órdenes del usuario ID: {}", usuarioId);
+
         return ordenRepository.findByUsuarioId(usuarioId);
     }
 
     public Double totalVentas() {
-        logger.info("Calculando total de ventas");
-        return ordenRepository.totalVentas();
+        log.info("Calculando total de ventas");
+
+        Double total = ordenRepository.totalVentas();
+
+        if (total == null) {
+            return 0.0;
+        }
+
+        return total;
+    }
+
+    public void validarTotalOrden(Double total) {
+        if (total == null || total <= 0) {
+            throw new BadRequestException("El total de la orden debe ser mayor a 0");
+        }
+    }
+
+    private void validarUsuarioExiste(Long usuarioId) {
+        try {
+            log.info("Validando existencia de usuario ID: {}", usuarioId);
+
+            Boolean existeUsuario = webClientBuilder.build()
+                    .get()
+                    .uri(usuarioServiceUrl + "/usuarios/" + usuarioId + "/exists")
+                    .retrieve()
+                    .bodyToMono(Boolean.class)
+                    .block();
+
+            if (!Boolean.TRUE.equals(existeUsuario)) {
+                throw new BadRequestException("El usuario con ID " + usuarioId + " no existe");
+            }
+
+        } catch (BadRequestException ex) {
+            throw ex;
+
+        } catch (Exception ex) {
+            throw new BadRequestException("No se pudo validar el usuario en usuario-service");
+        }
+    }
+
+    private void validarCarritoExiste(Long carritoId) {
+        try {
+            log.info("Validando existencia de carrito ID: {}", carritoId);
+
+            Boolean existeCarrito = webClientBuilder.build()
+                    .get()
+                    .uri(carritoServiceUrl + "/carritos/" + carritoId + "/exists")
+                    .retrieve()
+                    .bodyToMono(Boolean.class)
+                    .block();
+
+            if (!Boolean.TRUE.equals(existeCarrito)) {
+                throw new BadRequestException("El carrito con ID " + carritoId + " no existe");
+            }
+
+        } catch (BadRequestException ex) {
+            throw ex;
+
+        } catch (Exception ex) {
+            throw new BadRequestException("No se pudo validar el carrito en carrito-service");
+        }
     }
 }

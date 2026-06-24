@@ -1,56 +1,61 @@
 package com.example.orden_service.controller;
 
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
+import com.example.orden_service.assembler.OrdenModelAssembler;
 import com.example.orden_service.dto.OrdenDTO;
 import com.example.orden_service.model.Orden;
 import com.example.orden_service.service.OrdenService;
+import jakarta.validation.Valid;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 
 @RestController
 @RequestMapping("/ordenes")
 public class OrdenController {
 
     private final OrdenService ordenService;
+    private final OrdenModelAssembler ordenModelAssembler;
 
-    public OrdenController(OrdenService ordenService) {
+    public OrdenController(OrdenService ordenService, OrdenModelAssembler ordenModelAssembler) {
         this.ordenService = ordenService;
+        this.ordenModelAssembler = ordenModelAssembler;
     }
 
     @PostMapping
-public ResponseEntity<?> crearOrden(@RequestBody OrdenDTO ordenDTO) {
+    public ResponseEntity<EntityModel<OrdenDTO>> crearOrden(@Valid @RequestBody OrdenDTO ordenDTO) {
+        Orden nuevaOrden = ordenService.guardar(ordenDTO.toModel());
+        OrdenDTO respuesta = OrdenDTO.fromModel(nuevaOrden);
 
-    try {
-        Orden nueva = ordenService.guardar(ordenDTO.toModel());
-        return ResponseEntity.ok(OrdenDTO.fromModel(nueva));
-    } catch (RuntimeException e) {
-        return ResponseEntity.badRequest().body(e.getMessage());
+        return ResponseEntity.ok(ordenModelAssembler.toModel(respuesta));
     }
-}
 
     @GetMapping
-    public ResponseEntity<List<OrdenDTO>> listarOrdenes() {
-        List<Orden> ordenes = ordenService.listar();
-
-        List<OrdenDTO> dtos = ordenes.stream()
+    public ResponseEntity<CollectionModel<EntityModel<OrdenDTO>>> listarOrdenes() {
+        List<EntityModel<OrdenDTO>> ordenes = ordenService.listar()
+                .stream()
                 .map(OrdenDTO::fromModel)
-                .collect(Collectors.toList());
+                .map(ordenModelAssembler::toModel)
+                .toList();
 
-        return ResponseEntity.ok(dtos);
+        CollectionModel<EntityModel<OrdenDTO>> respuesta = CollectionModel.of(
+                ordenes,
+                linkTo(methodOn(OrdenController.class).listarOrdenes()).withSelfRel()
+        );
+
+        return ResponseEntity.ok(respuesta);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<OrdenDTO> buscarOrdenPorId(@PathVariable Long id) {
+    public ResponseEntity<EntityModel<OrdenDTO>> buscarOrdenPorId(@PathVariable Long id) {
         Orden orden = ordenService.buscarPorId(id);
+        OrdenDTO respuesta = OrdenDTO.fromModel(orden);
 
-        if (orden == null) {
-            return ResponseEntity.notFound().build();
-        }
-
-        return ResponseEntity.ok(OrdenDTO.fromModel(orden));
+        return ResponseEntity.ok(ordenModelAssembler.toModel(respuesta));
     }
 
     @GetMapping("/{id}/exists")
@@ -59,48 +64,42 @@ public ResponseEntity<?> crearOrden(@RequestBody OrdenDTO ordenDTO) {
     }
 
     @PutMapping("/{id}")
-public ResponseEntity<?> actualizarOrden(@PathVariable Long id,
-                                         @RequestBody OrdenDTO ordenDTO) {
+    public ResponseEntity<EntityModel<OrdenDTO>> actualizarOrden(
+            @PathVariable Long id,
+            @Valid @RequestBody OrdenDTO ordenDTO
+    ) {
+        Orden ordenActualizada = ordenService.actualizar(id, ordenDTO.toModel());
+        OrdenDTO respuesta = OrdenDTO.fromModel(ordenActualizada);
 
-    try {
-        Orden actualizada = ordenService.actualizar(id, ordenDTO.toModel());
-
-        if (actualizada == null) {
-            return ResponseEntity.notFound().build();
-        }
-
-        return ResponseEntity.ok(OrdenDTO.fromModel(actualizada));
-
-    } catch (RuntimeException e) {
-        return ResponseEntity.badRequest().body(e.getMessage());
+        return ResponseEntity.ok(ordenModelAssembler.toModel(respuesta));
     }
-}
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminarOrden(@PathVariable Long id) {
-        boolean eliminada = ordenService.eliminar(id);
-
-        if (!eliminada) {
-            return ResponseEntity.notFound().build();
-        }
+        ordenService.eliminar(id);
 
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/usuario/{usuarioId}")
-public ResponseEntity<List<OrdenDTO>> buscarPorUsuario(@PathVariable Long usuarioId) {
+    public ResponseEntity<CollectionModel<EntityModel<OrdenDTO>>> buscarPorUsuario(@PathVariable Long usuarioId) {
+        List<EntityModel<OrdenDTO>> ordenes = ordenService.buscarPorUsuarioId(usuarioId)
+                .stream()
+                .map(OrdenDTO::fromModel)
+                .map(ordenModelAssembler::toModel)
+                .toList();
 
-    List<Orden> ordenes = ordenService.buscarPorUsuarioId(usuarioId);
+        CollectionModel<EntityModel<OrdenDTO>> respuesta = CollectionModel.of(
+                ordenes,
+                linkTo(methodOn(OrdenController.class).buscarPorUsuario(usuarioId)).withSelfRel(),
+                linkTo(methodOn(OrdenController.class).listarOrdenes()).withRel("ordenes")
+        );
 
-    List<OrdenDTO> dtos = ordenes.stream()
-            .map(OrdenDTO::fromModel)
-            .collect(Collectors.toList());
-
-    return ResponseEntity.ok(dtos);
-}
+        return ResponseEntity.ok(respuesta);
+    }
 
     @GetMapping("/total-ventas")
     public ResponseEntity<Double> totalVentas() {
-    return ResponseEntity.ok(ordenService.totalVentas());
-}
+        return ResponseEntity.ok(ordenService.totalVentas());
+    }
 }
