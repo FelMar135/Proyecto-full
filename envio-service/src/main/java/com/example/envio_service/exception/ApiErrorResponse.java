@@ -1,7 +1,6 @@
-package com.example.pago_service.exception;
+package com.example.envio_service.exception;
 
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -11,8 +10,7 @@ import java.util.Map;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class ErrorResponse {
+public class ApiErrorResponse {
 
     private LocalDateTime timestamp;
     private int status;

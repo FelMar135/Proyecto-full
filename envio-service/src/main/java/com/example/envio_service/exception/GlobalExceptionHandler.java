@@ -15,55 +15,41 @@ import java.util.Map;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleResourceNotFoundException(
+    public ResponseEntity<ApiErrorResponse> handleResourceNotFoundException(
             ResourceNotFoundException ex,
             HttpServletRequest request
     ) {
-        ErrorResponse errorResponse = ErrorResponse.builder()
-                .timestamp(LocalDateTime.now())
-                .status(HttpStatus.NOT_FOUND.value())
-                .error("Recurso no encontrado")
-                .message(ex.getMessage())
-                .path(request.getRequestURI())
-                .build();
+        ApiErrorResponse response = new ApiErrorResponse(
+                LocalDateTime.now(),
+                HttpStatus.NOT_FOUND.value(),
+                "Recurso no encontrado",
+                ex.getMessage(),
+                request.getRequestURI(),
+                null
+        );
 
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
-    @ExceptionHandler(BusinessException.class)
-    public ResponseEntity<ErrorResponse> handleBusinessException(
-            BusinessException ex,
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<ApiErrorResponse> handleBadRequestException(
+            BadRequestException ex,
             HttpServletRequest request
     ) {
-        ErrorResponse errorResponse = ErrorResponse.builder()
-                .timestamp(LocalDateTime.now())
-                .status(HttpStatus.BAD_REQUEST.value())
-                .error("Error de negocio")
-                .message(ex.getMessage())
-                .path(request.getRequestURI())
-                .build();
+        ApiErrorResponse response = new ApiErrorResponse(
+                LocalDateTime.now(),
+                HttpStatus.BAD_REQUEST.value(),
+                "Solicitud incorrecta",
+                ex.getMessage(),
+                request.getRequestURI(),
+                null
+        );
 
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
-    }
-
-    @ExceptionHandler(RemoteServiceException.class)
-    public ResponseEntity<ErrorResponse> handleRemoteServiceException(
-            RemoteServiceException ex,
-            HttpServletRequest request
-    ) {
-        ErrorResponse errorResponse = ErrorResponse.builder()
-                .timestamp(LocalDateTime.now())
-                .status(HttpStatus.SERVICE_UNAVAILABLE.value())
-                .error("Error de comunicación con otro microservicio")
-                .message(ex.getMessage())
-                .path(request.getRequestURI())
-                .build();
-
-        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(errorResponse);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleValidationException(
+    public ResponseEntity<ApiErrorResponse> handleValidationException(
             MethodArgumentNotValidException ex,
             HttpServletRequest request
     ) {
@@ -73,31 +59,32 @@ public class GlobalExceptionHandler {
                 errors.put(error.getField(), error.getDefaultMessage())
         );
 
-        ErrorResponse errorResponse = ErrorResponse.builder()
-                .timestamp(LocalDateTime.now())
-                .status(HttpStatus.BAD_REQUEST.value())
-                .error("Error de validación")
-                .message("Existen campos inválidos en la solicitud")
-                .path(request.getRequestURI())
-                .errors(errors)
-                .build();
+        ApiErrorResponse response = new ApiErrorResponse(
+                LocalDateTime.now(),
+                HttpStatus.BAD_REQUEST.value(),
+                "Error de validación",
+                "Existen campos inválidos en la solicitud",
+                request.getRequestURI(),
+                errors
+        );
 
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleGeneralException(
+    public ResponseEntity<ApiErrorResponse> handleGeneralException(
             Exception ex,
             HttpServletRequest request
     ) {
-        ErrorResponse errorResponse = ErrorResponse.builder()
-                .timestamp(LocalDateTime.now())
-                .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                .error("Error interno del servidor")
-                .message(ex.getMessage())
-                .path(request.getRequestURI())
-                .build();
+        ApiErrorResponse response = new ApiErrorResponse(
+                LocalDateTime.now(),
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                "Error interno del servidor",
+                ex.getMessage(),
+                request.getRequestURI(),
+                null
+        );
 
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
 }
