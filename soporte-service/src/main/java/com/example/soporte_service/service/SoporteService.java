@@ -95,6 +95,10 @@ public class SoporteService {
         return SoporteDTO.fromModel(soporteActualizado);
     }
 
+    public Boolean existsById(Long id) {
+        return soporteRepository.existsById(id);
+    }
+
     public void deleteById(Long id) {
         if (!soporteRepository.existsById(id)) {
             // AQUI: Cambiado a ResourceNotFoundException
