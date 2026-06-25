@@ -19,6 +19,7 @@ import java.util.Arrays;
 import java.util.Locale;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -113,5 +114,50 @@ public class ResenaControllerTest {
         mockMvc.perform(delete("/resenas/{id}", 1L))
                 // Verificamos el código HTTP 204 No Content
                 .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void debeRetornar404CuandoResenaNoExiste() throws Exception {
+        // GIVEN: Forzamos que el servicio tire la excepción que creaste
+        when(resenaService.findById(99L))
+            .thenThrow(new com.example.resena_service.exception.ResourceNotFoundException("Reseña no encontrada"));
+
+        // WHEN & THEN: Hacemos la petición y esperamos un código 404 y tu JSON de error
+        mockMvc.perform(get("/resenas/{id}", 99L)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("Recurso no encontrado"));
+    }
+
+    @Test
+    void debeActualizarResenaYRetornar200() throws Exception {
+        // Simulamos que el servicio actualiza la reseña y nos devuelve la modificada
+        when(resenaService.update(eq(1L), any(ResenaDTO.class))).thenReturn(resenaDTO);
+
+        mockMvc.perform(put("/resenas/{id}", 1L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(resenaDTO)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.comentario").value(resenaDTO.getComentario()));
+    }
+
+    @Test
+    void debeObtenerResenasPorUsuario() throws Exception {
+        when(resenaService.findByUsuarioId(resenaDTO.getUsuarioId())).thenReturn(Arrays.asList(resenaDTO));
+
+        mockMvc.perform(get("/resenas/usuario/{usuarioId}", resenaDTO.getUsuarioId())
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$._embedded.resenaDTOList[0].usuarioId").value(resenaDTO.getUsuarioId()));
+    }
+
+    @Test
+    void debeObtenerResenasPorGpu() throws Exception {
+        when(resenaService.findByGpuId(resenaDTO.getGpuId())).thenReturn(Arrays.asList(resenaDTO));
+
+        mockMvc.perform(get("/resenas/gpu/{gpuId}", resenaDTO.getGpuId())
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$._embedded.resenaDTOList[0].gpuId").value(resenaDTO.getGpuId()));
     }
 }
