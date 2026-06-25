@@ -1,51 +1,63 @@
 package com.example.producto_service.controller;
 
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
+import com.example.producto_service.assembler.CategoriaModelAssembler;
 import com.example.producto_service.dto.CategoriaDTO;
 import com.example.producto_service.model.Categoria;
 import com.example.producto_service.service.CategoriaService;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 
 @RestController
 @RequestMapping("/categorias")
 public class CategoriaController {
 
     private final CategoriaService categoriaService;
+    private final CategoriaModelAssembler categoriaModelAssembler;
 
-    public CategoriaController(CategoriaService categoriaService) {
+    public CategoriaController(
+            CategoriaService categoriaService,
+            CategoriaModelAssembler categoriaModelAssembler
+    ) {
         this.categoriaService = categoriaService;
+        this.categoriaModelAssembler = categoriaModelAssembler;
     }
 
     @PostMapping
-    public ResponseEntity<CategoriaDTO> crearCategoria(@RequestBody CategoriaDTO categoriaDTO) {
+    public ResponseEntity<EntityModel<CategoriaDTO>> crearCategoria(@RequestBody CategoriaDTO categoriaDTO) {
         Categoria nueva = categoriaService.guardar(categoriaDTO.toModel());
-        return ResponseEntity.ok(CategoriaDTO.fromModel(nueva));
+        CategoriaDTO respuesta = CategoriaDTO.fromModel(nueva);
+
+        return ResponseEntity.ok(categoriaModelAssembler.toModel(respuesta));
     }
 
     @GetMapping
-    public ResponseEntity<List<CategoriaDTO>> listarCategorias() {
-        List<Categoria> categorias = categoriaService.listar();
-
-        List<CategoriaDTO> dtos = categorias.stream()
+    public ResponseEntity<CollectionModel<EntityModel<CategoriaDTO>>> listarCategorias() {
+        List<EntityModel<CategoriaDTO>> categorias = categoriaService.listar()
+                .stream()
                 .map(CategoriaDTO::fromModel)
-                .collect(Collectors.toList());
+                .map(categoriaModelAssembler::toModel)
+                .toList();
 
-        return ResponseEntity.ok(dtos);
+        CollectionModel<EntityModel<CategoriaDTO>> respuesta = CollectionModel.of(
+                categorias,
+                linkTo(methodOn(CategoriaController.class).listarCategorias()).withSelfRel()
+        );
+
+        return ResponseEntity.ok(respuesta);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<CategoriaDTO> buscarCategoriaPorId(@PathVariable Long id) {
+    public ResponseEntity<EntityModel<CategoriaDTO>> buscarCategoriaPorId(@PathVariable Long id) {
         Categoria categoria = categoriaService.buscarPorId(id);
+        CategoriaDTO respuesta = CategoriaDTO.fromModel(categoria);
 
-        if (categoria == null) {
-            return ResponseEntity.notFound().build();
-        }
-
-        return ResponseEntity.ok(CategoriaDTO.fromModel(categoria));
+        return ResponseEntity.ok(categoriaModelAssembler.toModel(respuesta));
     }
 
     @GetMapping("/{id}/exists")
@@ -54,25 +66,19 @@ public class CategoriaController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<CategoriaDTO> actualizarCategoria(@PathVariable Long id,
-                                                            @RequestBody CategoriaDTO categoriaDTO) {
+    public ResponseEntity<EntityModel<CategoriaDTO>> actualizarCategoria(
+            @PathVariable Long id,
+            @RequestBody CategoriaDTO categoriaDTO
+    ) {
         Categoria actualizada = categoriaService.actualizar(id, categoriaDTO.toModel());
+        CategoriaDTO respuesta = CategoriaDTO.fromModel(actualizada);
 
-        if (actualizada == null) {
-            return ResponseEntity.notFound().build();
-        }
-
-        return ResponseEntity.ok(CategoriaDTO.fromModel(actualizada));
+        return ResponseEntity.ok(categoriaModelAssembler.toModel(respuesta));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminarCategoria(@PathVariable Long id) {
-        boolean eliminada = categoriaService.eliminar(id);
-
-        if (!eliminada) {
-            return ResponseEntity.notFound().build();
-        }
-
+        categoriaService.eliminar(id);
         return ResponseEntity.noContent().build();
     }
 }
