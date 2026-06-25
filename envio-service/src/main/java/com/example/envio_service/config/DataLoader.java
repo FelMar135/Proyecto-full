@@ -23,30 +23,42 @@ public class DataLoader implements CommandLineRunner {
     public void run(String... args) {
         log.info("Ejecutando DataLoader de envio-service");
 
-        if (envioRepository.count() < 5) {
+        if (envioRepository.count() == 0) {
             List<Envio> envios = List.of(
                     Envio.builder()
-                            .ordenId(4L)
-                            .direccionEnvio("Av. Vicuña Mackenna 1200")
-                            .comuna("Santiago")
+                            .ordenId(1L)
+                            .direccionEnvio("Av. Providencia 1234")
+                            .comuna("Providencia")
                             .ciudad("Santiago")
                             .empresaTransportista("Chilexpress")
-                            .numeroSeguimiento("ENV-4004")
+                            .numeroSeguimiento("ENV-1001")
                             .estado("EN_PREPARACION")
                             .fechaEnvio(LocalDateTime.now())
                             .fechaEntregaEstimada(LocalDateTime.now().plusDays(3))
                             .build(),
 
                     Envio.builder()
-                            .ordenId(5L)
-                            .direccionEnvio("Av. Grecia 750")
+                            .ordenId(2L)
+                            .direccionEnvio("Los Leones 550")
                             .comuna("Ñuñoa")
                             .ciudad("Santiago")
                             .empresaTransportista("Starken")
-                            .numeroSeguimiento("ENV-5005")
+                            .numeroSeguimiento("ENV-1002")
                             .estado("EN_TRANSITO")
                             .fechaEnvio(LocalDateTime.now())
                             .fechaEntregaEstimada(LocalDateTime.now().plusDays(2))
+                            .build(),
+
+                    Envio.builder()
+                            .ordenId(3L)
+                            .direccionEnvio("Camino El Alba 890")
+                            .comuna("Las Condes")
+                            .ciudad("Santiago")
+                            .empresaTransportista("Blue Express")
+                            .numeroSeguimiento("ENV-1003")
+                            .estado("ENTREGADO")
+                            .fechaEnvio(LocalDateTime.now().minusDays(3))
+                            .fechaEntregaEstimada(LocalDateTime.now().plusDays(1))
                             .build()
             );
 
@@ -54,7 +66,7 @@ public class DataLoader implements CommandLineRunner {
 
             log.info("DataLoader insertó envíos iniciales correctamente");
         } else {
-            log.info("DataLoader no insertó datos porque ya existen envíos suficientes");
+            log.info("DataLoader no insertó datos porque ya existen envíos");
         }
     }
 }

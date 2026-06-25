@@ -125,17 +125,19 @@ public class EnvioController {
 
     @PostMapping
     @Operation(summary = "Crear un nuevo envío")
-    public ResponseEntity<EnvioDTO> crear(@Valid @RequestBody EnvioDTO envioDTO) {
+    public ResponseEntity<EntityModel<EnvioDTO>> crear(@Valid @RequestBody EnvioDTO envioDTO) {
         log.info("POST /envios - Creando nuevo envío");
 
         EnvioDTO envioCreado = envioService.crear(envioDTO);
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(envioCreado);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(envioModelAssembler.toModel(envioCreado));
     }
 
     @PutMapping("/{id}")
     @Operation(summary = "Actualizar un envío existente")
-    public ResponseEntity<EnvioDTO> actualizar(
+    public ResponseEntity<EntityModel<EnvioDTO>> actualizar(
             @PathVariable Long id,
             @Valid @RequestBody EnvioDTO envioDTO
     ) {
@@ -143,7 +145,7 @@ public class EnvioController {
 
         EnvioDTO envioActualizado = envioService.actualizar(id, envioDTO);
 
-        return ResponseEntity.ok(envioActualizado);
+        return ResponseEntity.ok(envioModelAssembler.toModel(envioActualizado));
     }
 
     @DeleteMapping("/{id}")
