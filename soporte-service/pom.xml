@@ -22,7 +22,7 @@
     </properties>
 
     <dependencies>
-        <!-- faker -->
+            <!-- faker -->
         <dependency>
             <groupId>com.github.javafaker</groupId>
             <artifactId>javafaker</artifactId>
@@ -84,7 +84,8 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <optional>true</optional>
+            <version>${lombok.version}</version>
+            <scope>provided</scope>
         </dependency>
 
         <!-- Tests -->
@@ -106,15 +107,18 @@
         <plugins>
 
             <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.14.0</version>
                 <configuration>
-                    <excludes>
-                        <exclude>
+                    <release>21</release>
+                    <annotationProcessorPaths>
+                        <path>
                             <groupId>org.projectlombok</groupId>
                             <artifactId>lombok</artifactId>
-                        </exclude>
-                    </excludes>
+                            <version>${lombok.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
                 </configuration>
             </plugin>
 
@@ -131,10 +135,19 @@
                     </annotationProcessorPaths>
                 </configuration>
             </plugin>
-            <plugin>
+<plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>0.8.12</version>
+
+                <configuration>
+                    <excludes>
+                        <exclude>com/example/resena_service/config/**</exclude>
+                        <exclude>com/example/resena_service/exception/**</exclude>
+                        <exclude>com/example/resena_service/dto/**</exclude>
+                        <exclude>com/example/resena_service/ResenaServiceApplication.class</exclude>
+                    </excludes>
+                </configuration>
 
                 <executions>
 
