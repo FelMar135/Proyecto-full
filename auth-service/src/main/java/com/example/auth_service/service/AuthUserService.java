@@ -1,9 +1,9 @@
 package com.example.auth_service.service;
 
+import com.example.auth_service.exception.BadRequestException;
+import com.example.auth_service.exception.ResourceNotFoundException;
 import com.example.auth_service.model.AuthUser;
 import com.example.auth_service.repository.AuthUserRepository;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -11,40 +11,51 @@ import java.util.List;
 @Service
 public class AuthUserService {
 
-    @Autowired
-    private AuthUserRepository authUserRepository;
+    private final AuthUserRepository authUserRepository;
+    private final JwtService jwtService;
+    private final HashService hashService;
 
-    @Autowired
-    private JwtService jwtService;
+    public AuthUserService(
+            AuthUserRepository authUserRepository,
+            JwtService jwtService,
+            HashService hashService
+    ) {
+        this.authUserRepository = authUserRepository;
+        this.jwtService = jwtService;
+        this.hashService = hashService;
+    }
 
-    @Autowired
-    private HashService hashService;
-
-    // LOGIN
     public String login(String email, String password) {
+        if (email == null || email.isBlank()) {
+            throw new BadRequestException("El email es obligatorio");
+        }
+
+        if (password == null || password.isBlank()) {
+            throw new BadRequestException("La contraseña es obligatoria");
+        }
 
         AuthUser user = authUserRepository.findByEmail(email);
 
         if (user == null) {
-            return null;
+            throw new BadRequestException("Credenciales inválidas");
         }
 
         String hashedInput = hashService.sha1(password);
 
         if (!hashedInput.equals(user.getPassword())) {
-            return null;
+            throw new BadRequestException("Credenciales inválidas");
         }
 
         return jwtService.generateToken(email);
     }
 
-    // REGISTER
     public String register(AuthUser authUser) {
+        validarUsuario(authUser, true);
 
         AuthUser existing = authUserRepository.findByEmail(authUser.getEmail());
 
         if (existing != null) {
-            return "Usuario ya existe!";
+            throw new BadRequestException("Ya existe un usuario registrado con ese email");
         }
 
         authUser.setPassword(hashService.sha1(authUser.getPassword()));
@@ -52,80 +63,110 @@ public class AuthUserService {
 
         authUserRepository.save(authUser);
 
-        return "Usuario creado exitosamente!";
+        return "Usuario creado exitosamente";
     }
 
-    // CREAR NORMAL
     public AuthUser guardar(AuthUser authUser) {
+        validarUsuario(authUser, true);
 
-        if (authUser.getPassword() != null) {
-            authUser.setPassword(hashService.sha1(authUser.getPassword()));
+        AuthUser existing = authUserRepository.findByEmail(authUser.getEmail());
+
+        if (existing != null) {
+            throw new BadRequestException("Ya existe un usuario registrado con ese email");
+        }
+
+        authUser.setPassword(hashService.sha1(authUser.getPassword()));
+
+        if (authUser.getRol() == null || authUser.getRol().isBlank()) {
+            authUser.setRol("USER");
         }
 
         return authUserRepository.save(authUser);
     }
 
-    // LISTAR
     public List<AuthUser> listar() {
         return authUserRepository.findAll();
     }
 
-    // BUSCAR POR ID
     public AuthUser buscarPorId(Long id) {
-        return authUserRepository.findById(id).orElse(null);
+        return authUserRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("No existe un usuario auth con ID: " + id));
     }
 
-    // EXISTE POR ID
     public boolean existePorId(Long id) {
         return authUserRepository.existsById(id);
     }
 
-    // BUSCAR EMAIL
     public AuthUser buscarPorEmail(String email) {
-        return authUserRepository.findByEmail(email);
+        if (email == null || email.isBlank()) {
+            throw new BadRequestException("El email es obligatorio");
+        }
+
+        AuthUser usuario = authUserRepository.findByEmail(email);
+
+        if (usuario == null) {
+            throw new ResourceNotFoundException("No existe un usuario auth con email: " + email);
+        }
+
+        return usuario;
     }
 
-    // ACTUALIZAR
     public AuthUser actualizar(Long id, AuthUser authUserActualizado) {
+        AuthUser authUser = authUserRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("No existe un usuario auth con ID: " + id));
 
-        AuthUser authUser = authUserRepository.findById(id).orElse(null);
+        validarUsuario(authUserActualizado, false);
 
-        if (authUser == null) {
-            return null;
+        AuthUser usuarioConMismoEmail = authUserRepository.findByEmail(authUserActualizado.getEmail());
+
+        if (usuarioConMismoEmail != null && !usuarioConMismoEmail.getId().equals(id)) {
+            throw new BadRequestException("Ya existe otro usuario registrado con ese email");
         }
 
         authUser.setUsername(authUserActualizado.getUsername());
         authUser.setEmail(authUserActualizado.getEmail());
 
-        if (authUserActualizado.getPassword() != null) {
+        if (authUserActualizado.getPassword() != null && !authUserActualizado.getPassword().isBlank()) {
             authUser.setPassword(hashService.sha1(authUserActualizado.getPassword()));
         }
 
-        authUser.setRol(authUserActualizado.getRol());
+        if (authUserActualizado.getRol() == null || authUserActualizado.getRol().isBlank()) {
+            authUser.setRol("USER");
+        } else {
+            authUser.setRol(authUserActualizado.getRol());
+        }
 
         return authUserRepository.save(authUser);
     }
 
-    // ELIMINAR
-    public boolean eliminar(Long id) {
-
+    public void eliminar(Long id) {
         if (!authUserRepository.existsById(id)) {
-            return false;
+            throw new ResourceNotFoundException("No existe un usuario auth con ID: " + id);
         }
 
         authUserRepository.deleteById(id);
-        return true;
     }
 
-    // ROLE
     public String getRole(String email) {
+        AuthUser user = buscarPorEmail(email);
+        return user.getRol();
+    }
 
-        AuthUser user = authUserRepository.findByEmail(email);
-
-        if (user == null) {
-            return null;
+    private void validarUsuario(AuthUser authUser, boolean validarPassword) {
+        if (authUser == null) {
+            throw new BadRequestException("El usuario auth no puede ser nulo");
         }
 
-        return user.getRol();
+        if (authUser.getUsername() == null || authUser.getUsername().isBlank()) {
+            throw new BadRequestException("El username es obligatorio");
+        }
+
+        if (authUser.getEmail() == null || authUser.getEmail().isBlank()) {
+            throw new BadRequestException("El email es obligatorio");
+        }
+
+        if (validarPassword && (authUser.getPassword() == null || authUser.getPassword().isBlank())) {
+            throw new BadRequestException("La contraseña es obligatoria");
+        }
     }
 }
