@@ -1,6 +1,8 @@
 package com.example.resena_service.service;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 import java.time.LocalDate;
@@ -28,6 +30,12 @@ public class ResenaServiceTest {
 
     @Mock
     private WebClient.Builder webClientBuilder;
+
+    // --- MOCKS ESPECIALES PARA EL WEBCLIENT ---
+    @Mock private WebClient webClient;
+    @Mock private WebClient.RequestHeadersUriSpec requestHeadersUriSpec;
+    @Mock private WebClient.RequestHeadersSpec requestHeadersSpec;
+    @Mock private WebClient.ResponseSpec responseSpec;
 
     private ResenaService resenaService;
     
@@ -124,5 +132,68 @@ public class ResenaServiceTest {
         assertFalse(resultados.isEmpty());
         // Verificamos que el usuario de la respuesta coincida con el de Faker
         assertEquals(usuarioFalsoId, resultados.get(0).getUsuarioId());
+    }
+
+    @Test
+    void buscarTodasLasResenas() {
+        when(resenaRepository.findAll()).thenReturn(Arrays.asList(resenaPrueba));
+        
+        List<ResenaDTO> lista = resenaService.findAll();
+        
+        assertFalse(lista.isEmpty());
+        assertEquals(1, lista.size());
+    }
+
+    @Test
+    void buscarPorGpuId() {
+        Long gpuFalsaId = resenaPrueba.getGpuId();
+        when(resenaRepository.findByGpuId(gpuFalsaId)).thenReturn(Arrays.asList(resenaPrueba));
+        
+        List<ResenaDTO> resultados = resenaService.findByGpuId(gpuFalsaId);
+        
+        assertFalse(resultados.isEmpty());
+        assertEquals(gpuFalsaId, resultados.get(0).getGpuId());
+    }
+
+    @Test
+    void actualizarResenaExitosa() {
+        // Simulamos que encuentra la reseña vieja
+        when(resenaRepository.findById(1L)).thenReturn(Optional.of(resenaPrueba));
+        // Simulamos que al guardar, retorna la reseña actualizada
+        when(resenaRepository.save(any(Resena.class))).thenReturn(resenaPrueba);
+
+        // Transformamos nuestra reseña de prueba a DTO para enviarla al método
+        ResenaDTO dtoAActualizar = ResenaDTO.fromModel(resenaPrueba);
+        dtoAActualizar.setComentario("Comentario editado");
+
+        ResenaDTO resultado = resenaService.update(1L, dtoAActualizar);
+
+        assertNotNull(resultado);
+        verify(resenaRepository).save(any(Resena.class));
+    }
+
+    // --- NUEVA PRUEBA DEL MÉTODO SAVE CON WEBCLIENT ---
+    @Test
+    void crearResenaExitosa() {
+        // 1. Simulamos toda la cadena mágica del WebClient para que retorne TRUE en ambos llamados (Usuario y GPU)
+        when(webClientBuilder.build()).thenReturn(webClient);
+        when(webClient.get()).thenReturn(requestHeadersUriSpec);
+        when(requestHeadersUriSpec.uri(anyString())).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
+        
+        // Retornamos true simulando que tanto el Usuario como la GPU existen en sus respectivos microservicios
+        when(responseSpec.bodyToMono(Boolean.class)).thenReturn(reactor.core.publisher.Mono.just(true));
+
+        // 2. Simulamos el guardado en base de datos
+        when(resenaRepository.save(any(Resena.class))).thenReturn(resenaPrueba);
+
+        // 3. Ejecutamos el método
+        ResenaDTO dtoAEnviar = ResenaDTO.fromModel(resenaPrueba);
+        ResenaDTO resultado = resenaService.save(dtoAEnviar);
+
+        // 4. Verificamos que no sea nulo y que se haya llamado al repositorio
+        assertNotNull(resultado);
+        assertEquals(resenaPrueba.getComentario(), resultado.getComentario());
+        verify(resenaRepository).save(any(Resena.class));
     }
 }
