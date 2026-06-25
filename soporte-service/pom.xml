@@ -122,30 +122,18 @@
                 </configuration>
             </plugin>
 
+            
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.14.0</version>
-                <configuration>
-                    <annotationProcessorPaths>
-                        <path>
-                            <groupId>org.projectlombok</groupId>
-                            <artifactId>lombok</artifactId>
-                        </path>
-                    </annotationProcessorPaths>
-                </configuration>
-            </plugin>
-<plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>0.8.12</version>
 
                 <configuration>
                     <excludes>
-                        <exclude>com/example/resena_service/config/**</exclude>
-                        <exclude>com/example/resena_service/exception/**</exclude>
-                        <exclude>com/example/resena_service/dto/**</exclude>
-                        <exclude>com/example/resena_service/ResenaServiceApplication.class</exclude>
+                        <exclude>com/example/soporte_service/config/**</exclude>
+                        <exclude>com/example/soporte_service/exception/**</exclude>
+                        <exclude>com/example/soporte_service/dto/**</exclude>
+                        <exclude>com/example/soporte_service/SoporteServiceApplication.class</exclude>
                     </excludes>
                 </configuration>
 
