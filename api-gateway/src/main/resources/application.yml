@@ -2,6 +2,9 @@ server:
   port: 9090
 
 spring:
+  application:
+    name: api-gateway
+
   main:
     web-application-type: reactive
 
@@ -18,49 +21,54 @@ spring:
         - id: auth-service
           uri: http://localhost:9094
           predicates:
-            - Path=/auth/**
+            - Path=/auth,/auth/**
 
         - id: usuario-service
           uri: http://localhost:9091
           predicates:
-            - Path=/usuarios/**
+            - Path=/usuarios,/usuarios/**
 
         - id: carrito-service
           uri: http://localhost:9092
           predicates:
-            - Path=/carritos/**
-
-        - id: producto-service-categorias
-          uri: http://localhost:9093
-          predicates:
-            - Path=/categorias/**
+            - Path=/carritos,/carritos/**
 
         - id: producto-service-gpus
           uri: http://localhost:9093
           predicates:
-            - Path=/gpus/**
+            - Path=/gpus,/gpus/**
+
+        - id: producto-service-categorias
+          uri: http://localhost:9093
+          predicates:
+            - Path=/categorias,/categorias/**
 
         - id: orden-service
           uri: http://localhost:9095
           predicates:
-            - Path=/ordenes/**
+            - Path=/ordenes,/ordenes/**
 
         - id: pago-service
           uri: http://localhost:9096
           predicates:
-            - Path=/pagos/**
+            - Path=/pagos,/pagos/**
 
         - id: resena-service
           uri: http://localhost:9097
           predicates:
-            - Path=/resenas/**
+            - Path=/resenas,/resenas/**
 
         - id: boleta-service
           uri: http://localhost:9098
           predicates:
-            - Path=/boletas/**
-        
+            - Path=/boletas,/boletas/**
+
         - id: envio-service
           uri: http://localhost:9099
           predicates:
             - Path=/envios,/envios/**
+
+        - id: soporte-service
+          uri: http://localhost:9100
+          predicates:
+            - Path=/soportes,/soportes/**
