@@ -87,17 +87,19 @@ public class PagoController {
 
     @PostMapping
     @Operation(summary = "Crear un nuevo pago")
-    public ResponseEntity<PagoDTO> crear(@Valid @RequestBody PagoDTO pagoDTO) {
+    public ResponseEntity<EntityModel<PagoDTO>> crear(@Valid @RequestBody PagoDTO pagoDTO) {
         log.info("POST /pagos - Creando nuevo pago");
 
         PagoDTO pagoCreado = pagoService.crear(pagoDTO);
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(pagoCreado);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(pagoModelAssembler.toModel(pagoCreado));
     }
 
     @PutMapping("/{id}")
     @Operation(summary = "Actualizar un pago existente")
-    public ResponseEntity<PagoDTO> actualizar(
+    public ResponseEntity<EntityModel<PagoDTO>> actualizar(
             @PathVariable Long id,
             @Valid @RequestBody PagoDTO pagoDTO
     ) {
@@ -105,7 +107,7 @@ public class PagoController {
 
         PagoDTO pagoActualizado = pagoService.actualizar(id, pagoDTO);
 
-        return ResponseEntity.ok(pagoActualizado);
+        return ResponseEntity.ok(pagoModelAssembler.toModel(pagoActualizado));
     }
 
     @DeleteMapping("/{id}")

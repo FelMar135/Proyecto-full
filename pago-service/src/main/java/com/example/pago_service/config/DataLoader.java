@@ -24,10 +24,10 @@ public class DataLoader implements CommandLineRunner {
     public void run(String... args) {
         log.info("Ejecutando DataLoader de pago-service");
 
-        if (pagoRepository.count() < 5) {
+        if (pagoRepository.count() == 0) {
             List<Pago> pagos = List.of(
                     Pago.builder()
-                            .ordenId(4L)
+                            .ordenId(1L)
                             .monto(new BigDecimal("399990"))
                             .metodoPago("DEBITO")
                             .estado("PAGADO")
@@ -35,10 +35,18 @@ public class DataLoader implements CommandLineRunner {
                             .build(),
 
                     Pago.builder()
-                            .ordenId(5L)
+                            .ordenId(2L)
                             .monto(new BigDecimal("899990"))
                             .metodoPago("TRANSFERENCIA")
                             .estado("PENDIENTE")
+                            .fechaPago(LocalDateTime.now())
+                            .build(),
+
+                    Pago.builder()
+                            .ordenId(3L)
+                            .monto(new BigDecimal("599990"))
+                            .metodoPago("CREDITO")
+                            .estado("PAGADO")
                             .fechaPago(LocalDateTime.now())
                             .build()
             );
@@ -47,7 +55,7 @@ public class DataLoader implements CommandLineRunner {
 
             log.info("DataLoader insertó pagos iniciales correctamente");
         } else {
-            log.info("DataLoader no insertó datos porque ya existen pagos suficientes");
+            log.info("DataLoader no insertó datos porque ya existen pagos");
         }
     }
 }
