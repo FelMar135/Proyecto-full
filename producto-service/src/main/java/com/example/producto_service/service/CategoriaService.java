@@ -1,11 +1,12 @@
 package com.example.producto_service.service;
 
-import java.util.List;
-
-import org.springframework.stereotype.Service;
-
+import com.example.producto_service.exception.BadRequestException;
+import com.example.producto_service.exception.ResourceNotFoundException;
 import com.example.producto_service.model.Categoria;
 import com.example.producto_service.repository.CategoriaRepository;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class CategoriaService {
@@ -17,6 +18,7 @@ public class CategoriaService {
     }
 
     public Categoria guardar(Categoria categoria) {
+        validarCategoria(categoria);
         return categoriaRepository.save(categoria);
     }
 
@@ -25,7 +27,8 @@ public class CategoriaService {
     }
 
     public Categoria buscarPorId(Long id) {
-        return categoriaRepository.findById(id).orElse(null);
+        return categoriaRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("No existe una categoría con ID: " + id));
     }
 
     public boolean existePorId(Long id) {
@@ -33,11 +36,10 @@ public class CategoriaService {
     }
 
     public Categoria actualizar(Long id, Categoria categoriaActualizada) {
-        Categoria categoria = categoriaRepository.findById(id).orElse(null);
+        Categoria categoria = categoriaRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("No existe una categoría con ID: " + id));
 
-        if (categoria == null) {
-            return null;
-        }
+        validarCategoria(categoriaActualizada);
 
         categoria.setNombre(categoriaActualizada.getNombre());
         categoria.setDescripcion(categoriaActualizada.getDescripcion());
@@ -45,12 +47,25 @@ public class CategoriaService {
         return categoriaRepository.save(categoria);
     }
 
-    public boolean eliminar(Long id) {
+    public void eliminar(Long id) {
         if (!categoriaRepository.existsById(id)) {
-            return false;
+            throw new ResourceNotFoundException("No existe una categoría con ID: " + id);
         }
 
         categoriaRepository.deleteById(id);
-        return true;
+    }
+
+    private void validarCategoria(Categoria categoria) {
+        if (categoria == null) {
+            throw new BadRequestException("La categoría no puede ser nula");
+        }
+
+        if (categoria.getNombre() == null || categoria.getNombre().isBlank()) {
+            throw new BadRequestException("El nombre de la categoría es obligatorio");
+        }
+
+        if (categoria.getDescripcion() == null || categoria.getDescripcion().isBlank()) {
+            throw new BadRequestException("La descripción de la categoría es obligatoria");
+        }
     }
 }

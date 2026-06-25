@@ -1,51 +1,60 @@
 package com.example.producto_service.controller;
 
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
+import com.example.producto_service.assembler.GpuModelAssembler;
 import com.example.producto_service.dto.GpuDTO;
 import com.example.producto_service.model.Gpu;
 import com.example.producto_service.service.GpuService;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 
 @RestController
 @RequestMapping("/gpus")
 public class GpuController {
 
     private final GpuService gpuService;
+    private final GpuModelAssembler gpuModelAssembler;
 
-    public GpuController(GpuService gpuService) {
+    public GpuController(GpuService gpuService, GpuModelAssembler gpuModelAssembler) {
         this.gpuService = gpuService;
+        this.gpuModelAssembler = gpuModelAssembler;
     }
 
     @PostMapping
-    public ResponseEntity<GpuDTO> crearGpu(@RequestBody GpuDTO gpuDTO) {
+    public ResponseEntity<EntityModel<GpuDTO>> crearGpu(@RequestBody GpuDTO gpuDTO) {
         Gpu nueva = gpuService.guardar(gpuDTO.toModel());
-        return ResponseEntity.ok(GpuDTO.fromModel(nueva));
+        GpuDTO respuesta = GpuDTO.fromModel(nueva);
+
+        return ResponseEntity.ok(gpuModelAssembler.toModel(respuesta));
     }
 
     @GetMapping
-    public ResponseEntity<List<GpuDTO>> listarGpus() {
-        List<Gpu> gpus = gpuService.listar();
-
-        List<GpuDTO> dtos = gpus.stream()
+    public ResponseEntity<CollectionModel<EntityModel<GpuDTO>>> listarGpus() {
+        List<EntityModel<GpuDTO>> gpus = gpuService.listar()
+                .stream()
                 .map(GpuDTO::fromModel)
-                .collect(Collectors.toList());
+                .map(gpuModelAssembler::toModel)
+                .toList();
 
-        return ResponseEntity.ok(dtos);
+        CollectionModel<EntityModel<GpuDTO>> respuesta = CollectionModel.of(
+                gpus,
+                linkTo(methodOn(GpuController.class).listarGpus()).withSelfRel()
+        );
+
+        return ResponseEntity.ok(respuesta);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<GpuDTO> buscarGpuPorId(@PathVariable Long id) {
+    public ResponseEntity<EntityModel<GpuDTO>> buscarGpuPorId(@PathVariable Long id) {
         Gpu gpu = gpuService.buscarPorId(id);
+        GpuDTO respuesta = GpuDTO.fromModel(gpu);
 
-        if (gpu == null) {
-            return ResponseEntity.notFound().build();
-        }
-
-        return ResponseEntity.ok(GpuDTO.fromModel(gpu));
+        return ResponseEntity.ok(gpuModelAssembler.toModel(respuesta));
     }
 
     @GetMapping("/{id}/exists")
@@ -54,25 +63,19 @@ public class GpuController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<GpuDTO> actualizarGpu(@PathVariable Long id,
-                                                @RequestBody GpuDTO gpuDTO) {
+    public ResponseEntity<EntityModel<GpuDTO>> actualizarGpu(
+            @PathVariable Long id,
+            @RequestBody GpuDTO gpuDTO
+    ) {
         Gpu actualizada = gpuService.actualizar(id, gpuDTO.toModel());
+        GpuDTO respuesta = GpuDTO.fromModel(actualizada);
 
-        if (actualizada == null) {
-            return ResponseEntity.notFound().build();
-        }
-
-        return ResponseEntity.ok(GpuDTO.fromModel(actualizada));
+        return ResponseEntity.ok(gpuModelAssembler.toModel(respuesta));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminarGpu(@PathVariable Long id) {
-        boolean eliminado = gpuService.eliminar(id);
-
-        if (!eliminado) {
-            return ResponseEntity.notFound().build();
-        }
-
+        gpuService.eliminar(id);
         return ResponseEntity.noContent().build();
     }
 }
