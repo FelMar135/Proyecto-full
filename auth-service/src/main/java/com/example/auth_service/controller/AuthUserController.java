@@ -1,129 +1,103 @@
 package com.example.auth_service.controller;
 
+import com.example.auth_service.assembler.AuthUserModelAssembler;
 import com.example.auth_service.model.AuthUser;
 import com.example.auth_service.service.AuthUserService;
-
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 
 @RestController
 @RequestMapping("/auth")
 public class AuthUserController {
 
     private final AuthUserService authUserService;
+    private final AuthUserModelAssembler authUserModelAssembler;
 
-    public AuthUserController(AuthUserService authUserService) {
+    public AuthUserController(
+            AuthUserService authUserService,
+            AuthUserModelAssembler authUserModelAssembler
+    ) {
         this.authUserService = authUserService;
+        this.authUserModelAssembler = authUserModelAssembler;
     }
 
-    // REGISTER
-    @PostMapping("/register")
-    public ResponseEntity<Map<String, String>> register(@RequestBody AuthUser authUser) {
-
-        String resultado = authUserService.register(authUser);
-
-        Map<String, String> resp = new HashMap<>();
-        resp.put("message", resultado);
-
-        return ResponseEntity.ok(resp);
-    }
-
-    // LOGIN
     @PostMapping("/login")
-    public ResponseEntity<Map<String, String>> login(@RequestBody Map<String, String> request) {
+    public ResponseEntity<String> login(@RequestBody AuthUser authUser) {
+        String token = authUserService.login(
+                authUser.getEmail(),
+                authUser.getPassword()
+        );
 
-        String email = request.get("email");
-        String password = request.get("password");
-
-        String token = authUserService.login(email, password);
-
-        Map<String, String> resp = new HashMap<>();
-
-        if (token == null) {
-            resp.put("status", "error");
-            resp.put("token", "");
-            return ResponseEntity.status(401).body(resp);
-        }
-
-        resp.put("status", "ok");
-        resp.put("token", token);
-
-        return ResponseEntity.ok(resp);
+        return ResponseEntity.ok(token);
     }
 
-    // CREAR NORMAL
+    @PostMapping("/register")
+    public ResponseEntity<String> register(@RequestBody AuthUser authUser) {
+        String mensaje = authUserService.register(authUser);
+        return ResponseEntity.ok(mensaje);
+    }
+
     @PostMapping
-    public ResponseEntity<AuthUser> crearUsuarioAuth(@RequestBody AuthUser authUser) {
-        AuthUser nuevo = authUserService.guardar(authUser);
-        return ResponseEntity.ok(nuevo);
+    public ResponseEntity<EntityModel<AuthUser>> crearUsuario(@RequestBody AuthUser authUser) {
+        AuthUser nuevoUsuario = authUserService.guardar(authUser);
+        return ResponseEntity.ok(authUserModelAssembler.toModel(nuevoUsuario));
     }
 
-    // LISTAR
     @GetMapping
-    public ResponseEntity<List<AuthUser>> listarUsuarios() {
-        return ResponseEntity.ok(authUserService.listar());
+    public ResponseEntity<CollectionModel<EntityModel<AuthUser>>> listarUsuarios() {
+        List<EntityModel<AuthUser>> usuarios = authUserService.listar()
+                .stream()
+                .map(authUserModelAssembler::toModel)
+                .toList();
+
+        CollectionModel<EntityModel<AuthUser>> respuesta = CollectionModel.of(
+                usuarios,
+                linkTo(methodOn(AuthUserController.class).listarUsuarios()).withSelfRel()
+        );
+
+        return ResponseEntity.ok(respuesta);
     }
 
-    // BUSCAR POR ID
     @GetMapping("/{id}")
-    public ResponseEntity<AuthUser> buscarPorId(@PathVariable Long id) {
-
+    public ResponseEntity<EntityModel<AuthUser>> buscarUsuarioPorId(@PathVariable Long id) {
         AuthUser usuario = authUserService.buscarPorId(id);
-
-        if (usuario == null) {
-            return ResponseEntity.notFound().build();
-        }
-
-        return ResponseEntity.ok(usuario);
+        return ResponseEntity.ok(authUserModelAssembler.toModel(usuario));
     }
 
-    // EXISTE POR ID
     @GetMapping("/{id}/exists")
-    public ResponseEntity<Boolean> existePorId(@PathVariable Long id) {
+    public ResponseEntity<Boolean> existeUsuario(@PathVariable Long id) {
         return ResponseEntity.ok(authUserService.existePorId(id));
     }
 
-    // BUSCAR POR EMAIL
     @GetMapping("/email/{email}")
-    public ResponseEntity<AuthUser> buscarPorEmail(@PathVariable String email) {
-
+    public ResponseEntity<EntityModel<AuthUser>> buscarUsuarioPorEmail(@PathVariable String email) {
         AuthUser usuario = authUserService.buscarPorEmail(email);
-
-        if (usuario == null) {
-            return ResponseEntity.notFound().build();
-        }
-
-        return ResponseEntity.ok(usuario);
+        return ResponseEntity.ok(authUserModelAssembler.toModel(usuario));
     }
 
-    // ACTUALIZAR
+    @GetMapping("/role/{email}")
+    public ResponseEntity<String> obtenerRolPorEmail(@PathVariable String email) {
+        return ResponseEntity.ok(authUserService.getRole(email));
+    }
+
     @PutMapping("/{id}")
-    public ResponseEntity<AuthUser> actualizar(@PathVariable Long id,
-                                               @RequestBody AuthUser authUser) {
-
+    public ResponseEntity<EntityModel<AuthUser>> actualizarUsuario(
+            @PathVariable Long id,
+            @RequestBody AuthUser authUser
+    ) {
         AuthUser actualizado = authUserService.actualizar(id, authUser);
-
-        if (actualizado == null) {
-            return ResponseEntity.notFound().build();
-        }
-
-        return ResponseEntity.ok(actualizado);
+        return ResponseEntity.ok(authUserModelAssembler.toModel(actualizado));
     }
 
-    // ELIMINAR
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
-
-        boolean eliminado = authUserService.eliminar(id);
-
-        if (!eliminado) {
-            return ResponseEntity.notFound().build();
-        }
-
+    public ResponseEntity<Void> eliminarUsuario(@PathVariable Long id) {
+        authUserService.eliminar(id);
         return ResponseEntity.noContent().build();
     }
 }
