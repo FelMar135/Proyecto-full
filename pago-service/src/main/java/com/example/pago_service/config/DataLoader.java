@@ -5,7 +5,6 @@ import com.example.pago_service.repository.PagoRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -15,7 +14,6 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-@Profile("dev")
 public class DataLoader implements CommandLineRunner {
 
     private final PagoRepository pagoRepository;
@@ -48,12 +46,68 @@ public class DataLoader implements CommandLineRunner {
                             .metodoPago("CREDITO")
                             .estado("PAGADO")
                             .fechaPago(LocalDateTime.now())
+                            .build(),
+
+                    Pago.builder()
+                            .ordenId(4L)
+                            .monto(new BigDecimal("249990"))
+                            .metodoPago("DEBITO")
+                            .estado("PAGADO")
+                            .fechaPago(LocalDateTime.now())
+                            .build(),
+
+                    Pago.builder()
+                            .ordenId(5L)
+                            .monto(new BigDecimal("1299990"))
+                            .metodoPago("TRANSFERENCIA")
+                            .estado("PAGADO")
+                            .fechaPago(LocalDateTime.now())
+                            .build(),
+
+                    Pago.builder()
+                            .ordenId(6L)
+                            .monto(new BigDecimal("189990"))
+                            .metodoPago("CREDITO")
+                            .estado("RECHAZADO")
+                            .fechaPago(LocalDateTime.now())
+                            .build(),
+
+                    Pago.builder()
+                            .ordenId(7L)
+                            .monto(new BigDecimal("713988"))
+                            .metodoPago("DEBITO")
+                            .estado("PENDIENTE")
+                            .fechaPago(LocalDateTime.now())
+                            .build(),
+
+                    Pago.builder()
+                            .ordenId(8L)
+                            .monto(new BigDecimal("1070988"))
+                            .metodoPago("TRANSFERENCIA")
+                            .estado("PAGADO")
+                            .fechaPago(LocalDateTime.now())
+                            .build(),
+
+                    Pago.builder()
+                            .ordenId(9L)
+                            .monto(new BigDecimal("475988"))
+                            .metodoPago("CREDITO")
+                            .estado("PAGADO")
+                            .fechaPago(LocalDateTime.now())
+                            .build(),
+
+                    Pago.builder()
+                            .ordenId(10L)
+                            .monto(new BigDecimal("1546988"))
+                            .metodoPago("DEBITO")
+                            .estado("PAGADO")
+                            .fechaPago(LocalDateTime.now())
                             .build()
             );
 
             pagoRepository.saveAll(pagos);
 
-            log.info("DataLoader insertó pagos iniciales correctamente");
+            log.info("DataLoader insertó 10 pagos iniciales correctamente");
         } else {
             log.info("DataLoader no insertó datos porque ya existen pagos");
         }
