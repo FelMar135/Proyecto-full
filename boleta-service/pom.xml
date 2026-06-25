@@ -16,14 +16,16 @@
     <artifactId>boleta-service</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>boleta-service</name>
+    <description>Microservicio de boletas para GpuStore</description>
 
     <properties>
         <java.version>21</java.version>
+        <lombok.version>1.18.38</lombok.version>
     </properties>
 
     <dependencies>
 
-        <!-- Web -->
+        <!-- Web MVC -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
@@ -66,7 +68,7 @@
             <artifactId>liquibase-core</artifactId>
         </dependency>
 
-        <!-- Swagger -->
+        <!-- Swagger / OpenAPI -->
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
@@ -77,7 +79,8 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <optional>true</optional>
+            <version>${lombok.version}</version>
+            <scope>provided</scope>
         </dependency>
 
         <!-- Tests -->
@@ -87,6 +90,7 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- Test para WebFlux/WebClient -->
         <dependency>
             <groupId>io.projectreactor</groupId>
             <artifactId>reactor-test</artifactId>
@@ -99,6 +103,22 @@
         <plugins>
 
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.14.1</version>
+                <configuration>
+                    <release>21</release>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+
+            <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
@@ -107,7 +127,6 @@
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>0.8.12</version>
-
                 <executions>
 
                     <execution>
@@ -119,18 +138,15 @@
                     <execution>
                         <id>report</id>
                         <phase>test</phase>
-
                         <goals>
                             <goal>report</goal>
                         </goals>
                     </execution>
 
                 </executions>
-
             </plugin>
 
         </plugins>
     </build>
 
 </project>
-
