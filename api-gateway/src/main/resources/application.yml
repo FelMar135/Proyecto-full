@@ -49,7 +49,7 @@ spring:
             - Path=/ordenes,/ordenes/**
 
         - id: pago-service
-          uri: http://localhost:9096
+          uri: ${PAGO_SERVICE_URL:http://localhost:9096}
           predicates:
             - Path=/pagos,/pagos/**
 
@@ -64,7 +64,7 @@ spring:
             - Path=/boletas,/boletas/**
 
         - id: envio-service
-          uri: http://localhost:9099
+          uri: ${ENVIO_SERVICE_URL:http://localhost:9099}
           predicates:
             - Path=/envios,/envios/**
 
