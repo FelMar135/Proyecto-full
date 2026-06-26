@@ -16,13 +16,16 @@
     <artifactId>resena-service</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>resena-service</name>
+    <description>Microservicio de reseñas para GpuStore</description>
 
     <properties>
         <java.version>21</java.version>
+        <lombok.version>1.18.38</lombok.version>
     </properties>
 
     <dependencies>
-            <!-- faker -->
+
+        <!-- Faker para tests -->
         <dependency>
             <groupId>com.github.javafaker</groupId>
             <artifactId>javafaker</artifactId>
@@ -30,7 +33,7 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- Web -->
+        <!-- Web MVC -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
@@ -73,7 +76,7 @@
             <artifactId>liquibase-core</artifactId>
         </dependency>
 
-        <!-- Swagger -->
+        <!-- Swagger / OpenAPI para Spring Boot 3.5.3 -->
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
@@ -95,21 +98,23 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- Reactor Test -->
         <dependency>
             <groupId>io.projectreactor</groupId>
             <artifactId>reactor-test</artifactId>
             <scope>test</scope>
         </dependency>
 
-</dependencies>
+    </dependencies>
 
     <build>
         <plugins>
 
+            <!-- Compiler Java 21 + Lombok -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.14.0</version>
+                <version>3.14.1</version>
                 <configuration>
                     <release>21</release>
                     <annotationProcessorPaths>
@@ -122,7 +127,13 @@
                 </configuration>
             </plugin>
 
-            
+            <!-- Necesario para crear JAR ejecutable en Docker -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+
+            <!-- JaCoCo -->
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
@@ -130,10 +141,10 @@
 
                 <configuration>
                     <excludes>
-                        <exclude>com/example/soporte_service/config/**</exclude>
-                        <exclude>com/example/soporte_service/exception/**</exclude>
-                        <exclude>com/example/soporte_service/dto/**</exclude>
-                        <exclude>com/example/soporte_service/SoporteServiceApplication.class</exclude>
+                        <exclude>com/example/resena_service/config/**</exclude>
+                        <exclude>com/example/resena_service/exception/**</exclude>
+                        <exclude>com/example/resena_service/dto/**</exclude>
+                        <exclude>com/example/resena_service/ResenaServiceApplication.class</exclude>
                     </excludes>
                 </configuration>
 
@@ -148,7 +159,6 @@
                     <execution>
                         <id>report</id>
                         <phase>test</phase>
-
                         <goals>
                             <goal>report</goal>
                         </goals>
