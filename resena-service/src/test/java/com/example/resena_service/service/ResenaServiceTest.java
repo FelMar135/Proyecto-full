@@ -39,7 +39,7 @@ public class ResenaServiceTest {
 
     private ResenaService resenaService;
     
-    // 1. Declaramos Faker y nuestra reseña global de prueba
+    // 1. Declaramos Faker
     private Faker faker;
     private Resena resenaPrueba;
 
@@ -54,9 +54,9 @@ public class ResenaServiceTest {
                 resenaRepository,
                 webClientBuilder);
 
-        // 2. Creamos la reseña con datos aleatorios de Faker
+        
         resenaPrueba = new Resena(
-                1L, // Mantenemos el ID 1L fijo para que los mocks sean más fáciles de leer
+                1L, 
                 faker.number().numberBetween(1L, 100L), // usuarioId aleatorio
                 faker.number().numberBetween(100L, 500L), // gpuId aleatorio
                 faker.lorem().sentence(8), // Comentario aleatorio de 8 palabras
@@ -90,7 +90,7 @@ public class ResenaServiceTest {
                 .thenReturn(Optional.empty());
 
         assertThrows(
-                ResourceNotFoundException.class, // O RuntimeException según tu implementación
+                ResourceNotFoundException.class, 
                 () -> resenaService.findById(99L));
     }
 
@@ -157,12 +157,12 @@ public class ResenaServiceTest {
 
     @Test
     void actualizarResenaExitosa() {
-        // Simulamos que encuentra la reseña vieja
+        
         when(resenaRepository.findById(1L)).thenReturn(Optional.of(resenaPrueba));
-        // Simulamos que al guardar, retorna la reseña actualizada
+       
         when(resenaRepository.save(any(Resena.class))).thenReturn(resenaPrueba);
 
-        // Transformamos nuestra reseña de prueba a DTO para enviarla al método
+        
         ResenaDTO dtoAActualizar = ResenaDTO.fromModel(resenaPrueba);
         dtoAActualizar.setComentario("Comentario editado");
 
@@ -172,10 +172,10 @@ public class ResenaServiceTest {
         verify(resenaRepository).save(any(Resena.class));
     }
 
-    // --- NUEVA PRUEBA DEL MÉTODO SAVE CON WEBCLIENT ---
+    
     @Test
     void crearResenaExitosa() {
-        // 1. Simulamos toda la cadena mágica del WebClient para que retorne TRUE en ambos llamados (Usuario y GPU)
+        
         when(webClientBuilder.build()).thenReturn(webClient);
         when(webClient.get()).thenReturn(requestHeadersUriSpec);
         when(requestHeadersUriSpec.uri(anyString())).thenReturn(requestHeadersSpec);
