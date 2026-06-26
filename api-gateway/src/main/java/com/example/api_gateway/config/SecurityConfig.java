@@ -42,7 +42,18 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
-                                "/webjars/**"
+                                "/webjars/**",
+                                "/auth/v3/api-docs",
+                                "/usuarios/v3/api-docs",
+                                "/carritos/v3/api-docs",
+                                "/gpus/v3/api-docs",
+                                "/categorias/v3/api-docs",
+                                "/ordenes/v3/api-docs",
+                                "/pagos/v3/api-docs",
+                                "/resenas/v3/api-docs",
+                                "/boletas/v3/api-docs",
+                                "/envios/v3/api-docs",
+                                "/soportes/v3/api-docs"
                         ).permitAll()
 
                         // Todo lo demás exige token

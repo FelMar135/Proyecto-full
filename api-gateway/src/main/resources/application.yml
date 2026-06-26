@@ -22,53 +22,101 @@ spring:
           uri: http://localhost:9094
           predicates:
             - Path=/auth,/auth/**
+          filters:
+          - StripPrefix=1
 
         - id: usuario-service
           uri: http://localhost:9091
           predicates:
             - Path=/usuarios,/usuarios/**
+          filters:
+          - StripPrefix=1
 
         - id: carrito-service
           uri: http://localhost:9092
           predicates:
             - Path=/carritos,/carritos/**
+          filters:
+          - StripPrefix=1
 
         - id: producto-service-gpus
           uri: http://localhost:9093
           predicates:
             - Path=/gpus,/gpus/**
+          filters:
+          - StripPrefix=1
 
         - id: producto-service-categorias
           uri: http://localhost:9093
           predicates:
             - Path=/categorias,/categorias/**
+          filters:
+          - StripPrefix=1
 
         - id: orden-service
           uri: http://localhost:9095
           predicates:
             - Path=/ordenes,/ordenes/**
+          filters:
+          - StripPrefix=1
 
         - id: pago-service
           uri: ${PAGO_SERVICE_URL:http://localhost:9096}
           predicates:
             - Path=/pagos,/pagos/**
+          filters:
+          - StripPrefix=1
 
         - id: resena-service
           uri: http://localhost:9097
           predicates:
             - Path=/resenas,/resenas/**
+          filters:
+          - StripPrefix=1
 
         - id: boleta-service
           uri: http://localhost:9098
           predicates:
             - Path=/boletas,/boletas/**
+          filters:
+          - StripPrefix=1
 
         - id: envio-service
           uri: ${ENVIO_SERVICE_URL:http://localhost:9099}
           predicates:
             - Path=/envios,/envios/**
+          filters:
+          - StripPrefix=1
 
         - id: soporte-service
           uri: http://localhost:9100
           predicates:
             - Path=/soportes,/soportes/**
+          filters:
+          - StripPrefix=1
+springdoc:
+    swagger-ui:
+      # Agrupa todos los microservicios en el Swagger del Gateway
+      urls:
+        - name: auth-service
+          url: /auth/v3/api-docs
+        - name: user-service
+          url: /usuarios/v3/api-docs
+        - name: carrito-service
+          url: /carritos/v3/api-docs
+        - name: producto-service
+          url: /gpus/v3/api-docs
+        - name: producto-service
+          url: /categorias/v3/api-docs
+        - name: orden-service
+          url: /ordenes/v3/api-docs
+        - name: pago-service
+          url: /pagos/v3/api-docs
+        - name: resena-service
+          url: /resenas/v3/api-docs
+        - name: boleta-service
+          url: /boletas/v3/api-docs
+        - name: envio-service
+          url: /envios/v3/api-docs
+        - name: soporte-service
+          url: /soportes/v3/api-docs
