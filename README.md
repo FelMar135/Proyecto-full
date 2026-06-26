@@ -166,7 +166,11 @@ git clone https://github.com/FelMar135/Proyecto-full
 cd Proyecto-full
 docker compose build
 docker compose up -d
-
+http://localhost:9090/auth/login
+{
+  "email": "admin@gpustore.cl",
+  "password": "123456"
+}
 ## Enlace git hud
 https://github.com/FelMar135/Proyecto-full
 
