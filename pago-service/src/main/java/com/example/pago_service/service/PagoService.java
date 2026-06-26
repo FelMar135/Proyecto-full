@@ -49,6 +49,7 @@ public class PagoService {
     public PagoDTO crear(PagoDTO pagoDTO) {
         log.info("Creando pago para orden ID: {}", pagoDTO.getOrdenId());
 
+        validarPago(pagoDTO);
         validarOrdenExiste(pagoDTO.getOrdenId());
 
         if (pagoDTO.getFechaPago() == null) {
@@ -63,6 +64,8 @@ public class PagoService {
 
     public PagoDTO actualizar(Long id, PagoDTO pagoDTO) {
         log.info("Actualizando pago con ID: {}", id);
+
+        validarPago(pagoDTO);
 
         Pago pagoExistente = pagoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("No existe un pago con ID: " + id));
@@ -104,12 +107,47 @@ public class PagoService {
                 .toList();
     }
 
+    public List<PagoDTO> buscarPorEstado(String estado) {
+        log.info("Buscando pagos con estado: {}", estado);
+
+        if (estado == null || estado.isBlank()) {
+            throw new BadRequestException("El estado del pago no puede estar vacío");
+        }
+
+        return pagoRepository.findByEstadoIgnoreCase(estado)
+                .stream()
+                .map(this::convertirADTO)
+                .toList();
+    }
+
     public Double calcularIva(Double monto) {
         if (monto == null || monto <= 0) {
             throw new BadRequestException("El monto debe ser mayor a 0 para calcular IVA");
         }
 
         return monto * 0.19;
+    }
+
+    private void validarPago(PagoDTO pagoDTO) {
+        if (pagoDTO == null) {
+            throw new BadRequestException("El pago no puede ser nulo");
+        }
+
+        if (pagoDTO.getOrdenId() == null || pagoDTO.getOrdenId() <= 0) {
+            throw new BadRequestException("El ID de la orden debe ser válido");
+        }
+
+        if (pagoDTO.getMonto() == null || pagoDTO.getMonto().doubleValue() <= 0) {
+            throw new BadRequestException("El monto del pago debe ser mayor a 0");
+        }
+
+        if (pagoDTO.getMetodoPago() == null || pagoDTO.getMetodoPago().isBlank()) {
+            throw new BadRequestException("El método de pago no puede estar vacío");
+        }
+
+        if (pagoDTO.getEstado() == null || pagoDTO.getEstado().isBlank()) {
+            throw new BadRequestException("El estado del pago no puede estar vacío");
+        }
     }
 
     private void validarOrdenExiste(Long ordenId) {

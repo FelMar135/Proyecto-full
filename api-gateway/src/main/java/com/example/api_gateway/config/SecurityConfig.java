@@ -30,33 +30,19 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeExchange(exchange -> exchange
 
-                        // Permitir preflight
                         .pathMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        // Solo login y register quedan libres
                         .pathMatchers(HttpMethod.POST, "/auth/login").permitAll()
                         .pathMatchers(HttpMethod.POST, "/auth/register").permitAll()
 
-                        // Swagger del gateway
                         .pathMatchers(
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/webjars/**",
-                                "/auth/v3/api-docs",
-                                "/usuarios/v3/api-docs",
-                                "/carritos/v3/api-docs",
-                                "/gpus/v3/api-docs",
-                                "/categorias/v3/api-docs",
-                                "/ordenes/v3/api-docs",
-                                "/pagos/v3/api-docs",
-                                "/resenas/v3/api-docs",
-                                "/boletas/v3/api-docs",
-                                "/envios/v3/api-docs",
-                                "/soportes/v3/api-docs"
+                                "/docs/**"
                         ).permitAll()
 
-                        // Todo lo demás exige token
                         .anyExchange().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2

@@ -10,4 +10,6 @@ import java.util.List;
 public interface PagoRepository extends JpaRepository<Pago, Long> {
 
     List<Pago> findByOrdenId(Long ordenId);
+
+    List<Pago> findByEstadoIgnoreCase(String estado);
 }

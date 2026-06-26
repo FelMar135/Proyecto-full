@@ -18,105 +18,162 @@ spring:
     gateway:
       routes:
 
+        # =========================
+        # RUTAS NORMALES
+        # =========================
+
         - id: auth-service
-          uri: http://localhost:9094
+          uri: ${AUTH_SERVICE_URL:http://localhost:9094}
           predicates:
             - Path=/auth,/auth/**
-          filters:
-          - StripPrefix=1
 
         - id: usuario-service
-          uri: http://localhost:9091
+          uri: ${USUARIO_SERVICE_URL:http://localhost:9091}
           predicates:
             - Path=/usuarios,/usuarios/**
-          filters:
-          - StripPrefix=1
 
         - id: carrito-service
-          uri: http://localhost:9092
+          uri: ${CARRITO_SERVICE_URL:http://localhost:9092}
           predicates:
             - Path=/carritos,/carritos/**
-          filters:
-          - StripPrefix=1
 
         - id: producto-service-gpus
-          uri: http://localhost:9093
+          uri: ${PRODUCTO_SERVICE_URL:http://localhost:9093}
           predicates:
             - Path=/gpus,/gpus/**
-          filters:
-          - StripPrefix=1
 
         - id: producto-service-categorias
-          uri: http://localhost:9093
+          uri: ${PRODUCTO_SERVICE_URL:http://localhost:9093}
           predicates:
             - Path=/categorias,/categorias/**
-          filters:
-          - StripPrefix=1
 
         - id: orden-service
-          uri: http://localhost:9095
+          uri: ${ORDEN_SERVICE_URL:http://localhost:9095}
           predicates:
             - Path=/ordenes,/ordenes/**
-          filters:
-          - StripPrefix=1
 
         - id: pago-service
           uri: ${PAGO_SERVICE_URL:http://localhost:9096}
           predicates:
             - Path=/pagos,/pagos/**
-          filters:
-          - StripPrefix=1
 
         - id: resena-service
-          uri: http://localhost:9097
+          uri: ${RESENA_SERVICE_URL:http://localhost:9097}
           predicates:
             - Path=/resenas,/resenas/**
-          filters:
-          - StripPrefix=1
 
         - id: boleta-service
-          uri: http://localhost:9098
+          uri: ${BOLETA_SERVICE_URL:http://localhost:9098}
           predicates:
             - Path=/boletas,/boletas/**
-          filters:
-          - StripPrefix=1
 
         - id: envio-service
           uri: ${ENVIO_SERVICE_URL:http://localhost:9099}
           predicates:
             - Path=/envios,/envios/**
-          filters:
-          - StripPrefix=1
 
         - id: soporte-service
-          uri: http://localhost:9100
+          uri: ${SOPORTE_SERVICE_URL:http://localhost:9100}
           predicates:
             - Path=/soportes,/soportes/**
+
+        # =========================
+        # RUTAS PARA SWAGGER / API DOCS
+        # =========================
+
+        - id: auth-docs
+          uri: ${AUTH_SERVICE_URL:http://localhost:9094}
+          predicates:
+            - Path=/docs/auth/v3/api-docs
           filters:
-          - StripPrefix=1
+            - RewritePath=/docs/auth/v3/api-docs, /v3/api-docs
+
+        - id: usuario-docs
+          uri: ${USUARIO_SERVICE_URL:http://localhost:9091}
+          predicates:
+            - Path=/docs/usuarios/v3/api-docs
+          filters:
+            - RewritePath=/docs/usuarios/v3/api-docs, /v3/api-docs
+
+        - id: carrito-docs
+          uri: ${CARRITO_SERVICE_URL:http://localhost:9092}
+          predicates:
+            - Path=/docs/carritos/v3/api-docs
+          filters:
+            - RewritePath=/docs/carritos/v3/api-docs, /v3/api-docs
+
+        - id: producto-docs
+          uri: ${PRODUCTO_SERVICE_URL:http://localhost:9093}
+          predicates:
+            - Path=/docs/productos/v3/api-docs
+          filters:
+            - RewritePath=/docs/productos/v3/api-docs, /v3/api-docs
+
+        - id: orden-docs
+          uri: ${ORDEN_SERVICE_URL:http://localhost:9095}
+          predicates:
+            - Path=/docs/ordenes/v3/api-docs
+          filters:
+            - RewritePath=/docs/ordenes/v3/api-docs, /v3/api-docs
+
+        - id: pago-docs
+          uri: ${PAGO_SERVICE_URL:http://localhost:9096}
+          predicates:
+            - Path=/docs/pagos/v3/api-docs
+          filters:
+            - RewritePath=/docs/pagos/v3/api-docs, /v3/api-docs
+
+        - id: resena-docs
+          uri: ${RESENA_SERVICE_URL:http://localhost:9097}
+          predicates:
+            - Path=/docs/resenas/v3/api-docs
+          filters:
+            - RewritePath=/docs/resenas/v3/api-docs, /v3/api-docs
+
+        - id: boleta-docs
+          uri: ${BOLETA_SERVICE_URL:http://localhost:9098}
+          predicates:
+            - Path=/docs/boletas/v3/api-docs
+          filters:
+            - RewritePath=/docs/boletas/v3/api-docs, /v3/api-docs
+
+        - id: envio-docs
+          uri: ${ENVIO_SERVICE_URL:http://localhost:9099}
+          predicates:
+            - Path=/docs/envios/v3/api-docs
+          filters:
+            - RewritePath=/docs/envios/v3/api-docs, /v3/api-docs
+
+        - id: soporte-docs
+          uri: ${SOPORTE_SERVICE_URL:http://localhost:9100}
+          predicates:
+            - Path=/docs/soportes/v3/api-docs
+          filters:
+            - RewritePath=/docs/soportes/v3/api-docs, /v3/api-docs
+
 springdoc:
-    swagger-ui:
-      # Agrupa todos los microservicios en el Swagger del Gateway
-      urls:
-        - name: auth-service
-          url: /auth/v3/api-docs
-        - name: user-service
-          url: /usuarios/v3/api-docs
-        - name: carrito-service
-          url: /carritos/v3/api-docs
-        - name: producto-service
-          url: /gpus/v3/api-docs
-        - name: producto-service
-          url: /categorias/v3/api-docs
-        - name: orden-service
-          url: /ordenes/v3/api-docs
-        - name: pago-service
-          url: /pagos/v3/api-docs
-        - name: resena-service
-          url: /resenas/v3/api-docs
-        - name: boleta-service
-          url: /boletas/v3/api-docs
-        - name: envio-service
-          url: /envios/v3/api-docs
-        - name: soporte-service
-          url: /soportes/v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    urls:
+      - name: Auth Service
+        url: /docs/auth/v3/api-docs
+      - name: Usuario Service
+        url: /docs/usuarios/v3/api-docs
+      - name: Carrito Service
+        url: /docs/carritos/v3/api-docs
+      - name: Producto Service
+        url: /docs/productos/v3/api-docs
+      - name: Orden Service
+        url: /docs/ordenes/v3/api-docs
+      - name: Pago Service
+        url: /docs/pagos/v3/api-docs
+      - name: Reseña Service
+        url: /docs/resenas/v3/api-docs
+      - name: Boleta Service
+        url: /docs/boletas/v3/api-docs
+      - name: Envío Service
+        url: /docs/envios/v3/api-docs
+      - name: Soporte Service
+        url: /docs/soportes/v3/api-docs
+  api-docs:
+    path: /v3/api-docs
