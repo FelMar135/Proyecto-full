@@ -66,6 +66,25 @@ public class PagoController {
         return ResponseEntity.ok(existe);
     }
 
+    @GetMapping("/estado/{estado}")
+    @Operation(summary = "Obtener pagos filtrados por estado")
+    public ResponseEntity<CollectionModel<EntityModel<PagoDTO>>> obtenerPorEstado(@PathVariable String estado) {
+        log.info("GET /pagos/estado/{} - Obteniendo pagos por estado", estado);
+
+        List<EntityModel<PagoDTO>> pagos = pagoService.buscarPorEstado(estado)
+                .stream()
+                .map(pagoModelAssembler::toModel)
+                .toList();
+
+        CollectionModel<EntityModel<PagoDTO>> response = CollectionModel.of(
+                pagos,
+                linkTo(methodOn(PagoController.class).obtenerPorEstado(estado)).withSelfRel(),
+                linkTo(methodOn(PagoController.class).obtenerTodos()).withRel("todos-los-pagos")
+        );
+
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/orden/{ordenId}")
     @Operation(summary = "Obtener pagos asociados a una orden")
     public ResponseEntity<CollectionModel<EntityModel<PagoDTO>>> obtenerPorOrdenId(@PathVariable Long ordenId) {

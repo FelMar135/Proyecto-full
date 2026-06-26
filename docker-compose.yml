@@ -4,17 +4,18 @@ services:
     image: mysql:8.0
     container_name: mysql-gpustore
     environment:
-      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      MYSQL_ROOT_PASSWORD: root
       MYSQL_ROOT_HOST: "%"
     ports:
       - "3307:3306"
     networks:
       - gpustore-net
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root"]
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -proot --silent"]
       interval: 10s
       timeout: 5s
-      retries: 10
+      retries: 30
+      start_period: 60s
 
   auth-service:
     build: ./auth-service
@@ -24,7 +25,9 @@ services:
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/bd_auth?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD:
+      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_LIQUIBASE_USER: root
+      SPRING_LIQUIBASE_PASSWORD: root
     depends_on:
       mysql:
         condition: service_healthy
@@ -39,7 +42,9 @@ services:
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/bd_usuario?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD:
+      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_LIQUIBASE_USER: root
+      SPRING_LIQUIBASE_PASSWORD: root
     depends_on:
       mysql:
         condition: service_healthy
@@ -54,10 +59,35 @@ services:
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/bd_producto?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD:
+      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_LIQUIBASE_USER: root
+      SPRING_LIQUIBASE_PASSWORD: root
     depends_on:
       mysql:
         condition: service_healthy
+    networks:
+      - gpustore-net
+
+  carrito-service:
+    build: ./carrito-service
+    container_name: carrito-service
+    ports:
+      - "9092:9092"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/bd_carrito?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_LIQUIBASE_USER: root
+      SPRING_LIQUIBASE_PASSWORD: root
+      PRODUCTO_SERVICE_URL: http://producto-service:9093
+      USUARIO_SERVICE_URL: http://user-service:9091
+    depends_on:
+      mysql:
+        condition: service_healthy
+      user-service:
+        condition: service_started
+      producto-service:
+        condition: service_started
     networks:
       - gpustore-net
 
@@ -69,7 +99,9 @@ services:
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/bd_orden?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD:
+      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_LIQUIBASE_USER: root
+      SPRING_LIQUIBASE_PASSWORD: root
     depends_on:
       mysql:
         condition: service_healthy
@@ -84,7 +116,9 @@ services:
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/bd_pago?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD:
+      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_LIQUIBASE_USER: root
+      SPRING_LIQUIBASE_PASSWORD: root
       ORDEN_SERVICE_URL: http://orden-service:9095
     depends_on:
       mysql:
@@ -102,7 +136,9 @@ services:
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/bd_envio?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD:
+      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_LIQUIBASE_USER: root
+      SPRING_LIQUIBASE_PASSWORD: root
       ORDEN_SERVICE_URL: http://orden-service:9095
     depends_on:
       mysql:
@@ -120,7 +156,9 @@ services:
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/bd_boleta?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD:
+      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_LIQUIBASE_USER: root
+      SPRING_LIQUIBASE_PASSWORD: root
       USUARIO_SERVICE_URL: http://user-service:9091
       ORDEN_SERVICE_URL: http://orden-service:9095
     depends_on:
@@ -141,7 +179,9 @@ services:
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/bd_resena?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD:
+      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_LIQUIBASE_USER: root
+      SPRING_LIQUIBASE_PASSWORD: root
       USUARIO_SERVICE_URL: http://user-service:9091
       PRODUCTO_SERVICE_URL: http://producto-service:9093
     depends_on:
@@ -162,7 +202,9 @@ services:
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/bd_soporte?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD:
+      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_LIQUIBASE_USER: root
+      SPRING_LIQUIBASE_PASSWORD: root
       USUARIO_SERVICE_URL: http://user-service:9091
       ORDEN_SERVICE_URL: http://orden-service:9095
     depends_on:
@@ -183,20 +225,21 @@ services:
     environment:
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_SECRET_KEY: esta_es_mi_compleja_clave_secreta
 
-      SPRING_CLOUD_GATEWAY_ROUTES_0_URI: http://auth-service:9094
-      SPRING_CLOUD_GATEWAY_ROUTES_1_URI: http://user-service:9091
-      SPRING_CLOUD_GATEWAY_ROUTES_2_URI: http://carrito-service:9092
-      SPRING_CLOUD_GATEWAY_ROUTES_3_URI: http://producto-service:9093
-      SPRING_CLOUD_GATEWAY_ROUTES_4_URI: http://producto-service:9093
-      SPRING_CLOUD_GATEWAY_ROUTES_5_URI: http://orden-service:9095
-      SPRING_CLOUD_GATEWAY_ROUTES_6_URI: http://pago-service:9096
-      SPRING_CLOUD_GATEWAY_ROUTES_7_URI: http://resena-service:9097
-      SPRING_CLOUD_GATEWAY_ROUTES_8_URI: http://boleta-service:9098
-      SPRING_CLOUD_GATEWAY_ROUTES_9_URI: http://envio-service:9099
-      SPRING_CLOUD_GATEWAY_ROUTES_10_URI: http://soporte-service:9100
+      AUTH_SERVICE_URL: http://auth-service:9094
+      USUARIO_SERVICE_URL: http://user-service:9091
+      CARRITO_SERVICE_URL: http://carrito-service:9092
+      PRODUCTO_SERVICE_URL: http://producto-service:9093
+      ORDEN_SERVICE_URL: http://orden-service:9095
+      PAGO_SERVICE_URL: http://pago-service:9096
+      RESENA_SERVICE_URL: http://resena-service:9097
+      BOLETA_SERVICE_URL: http://boleta-service:9098
+      ENVIO_SERVICE_URL: http://envio-service:9099
+      SOPORTE_SERVICE_URL: http://soporte-service:9100
+
     depends_on:
       - auth-service
       - user-service
+      - carrito-service
       - producto-service
       - orden-service
       - pago-service
@@ -204,6 +247,7 @@ services:
       - boleta-service
       - resena-service
       - soporte-service
+
     networks:
       - gpustore-net
 
