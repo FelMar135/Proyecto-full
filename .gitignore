@@ -1,1 +1,2 @@
-*.zip
+echo "*.rar" >> .gitignore
+echo "*.zip" >> .gitignore
