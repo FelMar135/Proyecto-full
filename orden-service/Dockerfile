@@ -1,11 +1,10 @@
-FROM eclipse-temurin:21-jdk AS build
+FROM maven:3-eclipse-temurin-21 AS build
 WORKDIR /app
 COPY . .
-RUN chmod +x mvnw
-RUN ./mvnw clean package -Dmaven.test.skip=true
+RUN mvn clean package -Dmaven.test.skip=true
 
 FROM eclipse-temurin:21-jre
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
-EXPOSE 9097
+EXPOSE 9095
 ENTRYPOINT ["java", "-jar", "app.jar"]
