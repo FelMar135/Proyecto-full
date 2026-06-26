@@ -1,14 +1,17 @@
 package com.example.carrito_service.controller;
 
+import com.example.carrito_service.model.Carrito;
+import com.example.carrito_service.service.CarritoService;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.IanaLinkRelations;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import com.example.carrito_service.dto.CarritoDTO;
-import com.example.carrito_service.model.Carrito;
-import com.example.carrito_service.service.CarritoService;
-
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 
 @RestController
 @RequestMapping("/carritos")
@@ -20,82 +23,117 @@ public class CarritoController {
         this.carritoService = carritoService;
     }
 
-    @PostMapping
-    public ResponseEntity<?> crearCarrito(@RequestBody CarritoDTO carritoDTO) {
-    try {
-        Carrito nuevo = carritoService.guardar(carritoDTO.toModel());
-        return ResponseEntity.ok(CarritoDTO.fromModel(nuevo));
-    } catch (RuntimeException e) {
-        return ResponseEntity
-                .badRequest()
-                .body(e.getMessage());
-    }
-    }
-
+    // 1. OBTENER TODOS
     @GetMapping
-    public ResponseEntity<List<CarritoDTO>> listarCarritos() {
-        List<Carrito> carritos = carritoService.listar();
+    public ResponseEntity<CollectionModel<EntityModel<Carrito>>> obtenerTodos() {
 
-        List<CarritoDTO> dtos = carritos.stream()
-                .map(CarritoDTO::fromModel)
+        List<EntityModel<Carrito>> carritos = carritoService.listar().stream()
+                .map(carrito -> EntityModel.of(carrito,
+                        linkTo(methodOn(CarritoController.class)
+                                .obtenerPorId(carrito.getId()))
+                                .withSelfRel()))
                 .collect(Collectors.toList());
 
-        return ResponseEntity.ok(dtos);
+        return ResponseEntity.ok(
+                CollectionModel.of(carritos,
+                        linkTo(methodOn(CarritoController.class)
+                                .obtenerTodos())
+                                .withSelfRel())
+        );
     }
 
+    // 2. OBTENER POR ID
     @GetMapping("/{id}")
-    public ResponseEntity<CarritoDTO> buscarCarritoPorId(@PathVariable Long id) {
+    public ResponseEntity<EntityModel<Carrito>> obtenerPorId(@PathVariable Long id) {
+
         Carrito carrito = carritoService.buscarPorId(id);
 
-        if (carrito == null) {
-            return ResponseEntity.notFound().build();
-        }
+        EntityModel<Carrito> model = EntityModel.of(carrito,
+                linkTo(methodOn(CarritoController.class)
+                        .obtenerPorId(id))
+                        .withSelfRel(),
+                linkTo(methodOn(CarritoController.class)
+                        .obtenerTodos())
+                        .withRel("carritos"));
 
-        return ResponseEntity.ok(CarritoDTO.fromModel(carrito));
+        return ResponseEntity.ok(model);
     }
 
-    @GetMapping("/{id}/exists")
-    public ResponseEntity<Boolean> existeCarrito(@PathVariable Long id) {
-        return ResponseEntity.ok(carritoService.existePorId(id));
+    // 3. CREAR
+    @PostMapping
+    public ResponseEntity<EntityModel<Carrito>> crear(@RequestBody Carrito carrito) {
+
+        Carrito nuevoCarrito = carritoService.guardar(carrito);
+
+        EntityModel<Carrito> model = EntityModel.of(nuevoCarrito,
+                linkTo(methodOn(CarritoController.class)
+                        .obtenerPorId(nuevoCarrito.getId()))
+                        .withSelfRel());
+
+        return ResponseEntity
+                .created(model.getRequiredLink(IanaLinkRelations.SELF).toUri())
+                .body(model);
     }
 
+    // 4. ACTUALIZAR
     @PutMapping("/{id}")
-    public ResponseEntity<CarritoDTO> actualizarCarrito(@PathVariable Long id,
-                                                        @RequestBody CarritoDTO carritoDTO) {
-        Carrito actualizado = carritoService.actualizar(id, carritoDTO.toModel());
+    public ResponseEntity<EntityModel<Carrito>> actualizar(
+            @PathVariable Long id,
+            @RequestBody Carrito carrito) {
 
-        if (actualizado == null) {
-            return ResponseEntity.notFound().build();
-        }
+        Carrito actualizado = carritoService.actualizar(id, carrito);
 
-        return ResponseEntity.ok(CarritoDTO.fromModel(actualizado));
+        EntityModel<Carrito> model = EntityModel.of(actualizado,
+                linkTo(methodOn(CarritoController.class)
+                        .obtenerPorId(id))
+                        .withSelfRel());
+
+        return ResponseEntity.ok(model);
     }
 
+    // 5. ELIMINAR
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminarCarrito(@PathVariable Long id) {
-        boolean eliminado = carritoService.eliminar(id);
+    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
 
-        if (!eliminado) {
-            return ResponseEntity.notFound().build();
-        }
-
+        carritoService.eliminar(id);
         return ResponseEntity.noContent().build();
     }
 
+    // 6. VERIFICAR EXISTENCIA
+    @GetMapping("/{id}/exists")
+    public ResponseEntity<Boolean> existePorId(@PathVariable Long id) {
+
+        return ResponseEntity.ok(carritoService.existePorId(id));
+    }
+
+    // 7. BUSCAR POR USUARIO
     @GetMapping("/usuario/{usuarioId}")
-public ResponseEntity<List<CarritoDTO>> buscarPorUsuario(@PathVariable Long usuarioId) {
+    public ResponseEntity<CollectionModel<EntityModel<Carrito>>> obtenerPorUsuario(
+            @PathVariable Long usuarioId) {
 
-    List<Carrito> carritos = carritoService.buscarPorUsuarioId(usuarioId);
+        List<EntityModel<Carrito>> carritos = carritoService.buscarPorUsuarioId(usuarioId)
+                .stream()
+                .map(carrito -> EntityModel.of(carrito,
+                        linkTo(methodOn(CarritoController.class)
+                                .obtenerPorId(carrito.getId()))
+                                .withSelfRel()))
+                .collect(Collectors.toList());
 
-    List<CarritoDTO> dtos = carritos.stream()
-            .map(CarritoDTO::fromModel)
-            .collect(Collectors.toList());
+        return ResponseEntity.ok(
+                CollectionModel.of(carritos,
+                        linkTo(methodOn(CarritoController.class)
+                                .obtenerPorUsuario(usuarioId))
+                                .withSelfRel())
+        );
+    }
 
-    return ResponseEntity.ok(dtos);
-}
+    // 8. TOTAL DE PRODUCTOS DEL USUARIO
+    @GetMapping("/usuario/{usuarioId}/total")
+    public ResponseEntity<Integer> totalProductosPorUsuario(
+            @PathVariable Long usuarioId) {
 
-@GetMapping("/total-productos/{usuarioId}")
-public ResponseEntity<Integer> totalProductosPorUsuario(@PathVariable Long usuarioId) {
-    return ResponseEntity.ok(carritoService.totalProductosPorUsuario(usuarioId));
-}
+        return ResponseEntity.ok(
+                carritoService.totalProductosPorUsuario(usuarioId)
+        );
+    }
 }
