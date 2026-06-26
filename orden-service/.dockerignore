@@ -1,0 +1,7 @@
+cat > orden-service/.dockerignore <<'EOF'
+target
+.git
+.idea
+.vscode
+*.iml
+EOF
