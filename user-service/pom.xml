@@ -18,7 +18,8 @@
     <name>user-service</name>
 
     <properties>
-        <java.version>21</java.version>
+    <java.version>21</java.version>
+    <lombok.version>1.18.38</lombok.version>
     </properties>
 
     <dependencies>
@@ -104,60 +105,68 @@
 </dependencies>
 
     <build>
-        <plugins>
+    <plugins>
 
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.14.0</version>
-                <configuration>
-                    <release>21</release>
-                    <annotationProcessorPaths>
-                        <path>
-                            <groupId>org.projectlombok</groupId>
-                            <artifactId>lombok</artifactId>
-                            <version>${lombok.version}</version>
-                        </path>
-                    </annotationProcessorPaths>
-                </configuration>
-            </plugin>
+        <!-- Compiler con Lombok -->
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>3.14.0</version>
+            <configuration>
+                <release>21</release>
+                <annotationProcessorPaths>
+                    <path>
+                        <groupId>org.projectlombok</groupId>
+                        <artifactId>lombok</artifactId>
+                        <version>${lombok.version}</version>
+                    </path>
+                </annotationProcessorPaths>
+            </configuration>
+        </plugin>
 
-            <plugin>
-                <groupId>org.jacoco</groupId>
-                <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.8.12</version>
+        <!-- Spring Boot -->
+        <plugin>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-maven-plugin</artifactId>
+        </plugin>
 
-                <configuration>
-                    <excludes>
-                        <exclude>com/example/resena_service/config/**</exclude>
-                        <exclude>com/example/resena_service/exception/**</exclude>
-                        <exclude>com/example/resena_service/dto/**</exclude>
-                        <exclude>com/example/resena_service/ResenaServiceApplication.class</exclude>
-                    </excludes>
-                </configuration>
+        <!-- JaCoCo -->
+        <plugin>
+            <groupId>org.jacoco</groupId>
+            <artifactId>jacoco-maven-plugin</artifactId>
+            <version>0.8.12</version>
 
-                <executions>
+            <configuration>
+                <excludes>
+                    <exclude>com/example/user_service/config/**</exclude>
+                    <exclude>com/example/user_service/exception/**</exclude>
+                    <exclude>com/example/user_service/dto/**</exclude>
+                    <exclude>com/example/user_service/UserServiceApplication.class</exclude>
+                </excludes>
+            </configuration>
 
-                    <execution>
-                        <goals>
-                            <goal>prepare-agent</goal>
-                        </goals>
-                    </execution>
+            <executions>
 
-                    <execution>
-                        <id>report</id>
-                        <phase>test</phase>
+                <execution>
+                    <goals>
+                        <goal>prepare-agent</goal>
+                    </goals>
+                </execution>
 
-                        <goals>
-                            <goal>report</goal>
-                        </goals>
-                    </execution>
+                <execution>
+                    <id>report</id>
+                    <phase>test</phase>
 
-                </executions>
+                    <goals>
+                        <goal>report</goal>
+                    </goals>
+                </execution>
 
-            </plugin>
+            </executions>
 
-        </plugins>
-    </build>
+        </plugin>
+
+    </plugins>
+</build>
 
 </project>
