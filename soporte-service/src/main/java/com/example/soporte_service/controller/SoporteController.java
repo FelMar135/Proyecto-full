@@ -3,6 +3,10 @@ package com.example.soporte_service.controller;
 import com.example.soporte_service.assembler.SoporteModelAssembler;
 import com.example.soporte_service.dto.SoporteDTO;
 import com.example.soporte_service.service.SoporteService;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.IanaLinkRelations;
@@ -15,6 +19,7 @@ import java.util.stream.Collectors;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
+@Tag(name = "Soporte", description = "Operaciones relacionadas con los tickets de soporte")
 @RestController
 @RequestMapping("/soporte")
 public class SoporteController {
@@ -27,54 +32,59 @@ public class SoporteController {
         this.assembler = assembler;
     }
 
-    // 1. OBTENER TODOS
+    @Operation(summary = "Listar todos los tickets de soporte")
     @GetMapping
     public ResponseEntity<CollectionModel<EntityModel<SoporteDTO>>> obtenerTodos() {
         List<EntityModel<SoporteDTO>> tickets = soporteService.findAll().stream()
                 .map(assembler::toModel)
                 .collect(Collectors.toList());
 
-        return ResponseEntity.ok(CollectionModel.of(tickets,
-                linkTo(methodOn(SoporteController.class).obtenerTodos()).withSelfRel()));
+        return ResponseEntity.ok(CollectionModel.of(
+                tickets,
+                linkTo(methodOn(SoporteController.class).obtenerTodos()).withSelfRel()
+        ));
     }
 
-    // 2. OBTENER POR ID
+    @Operation(summary = "Buscar un ticket de soporte por ID")
     @GetMapping("/{id}")
     public ResponseEntity<EntityModel<SoporteDTO>> obtenerPorId(@PathVariable Long id) {
         SoporteDTO soporte = soporteService.findById(id);
         return ResponseEntity.ok(assembler.toModel(soporte));
     }
 
-    // 3. OBTENER POR USUARIO ID
+    @Operation(summary = "Buscar tickets por ID de usuario")
     @GetMapping("/usuario/{usuarioId}")
     public ResponseEntity<CollectionModel<EntityModel<SoporteDTO>>> obtenerPorUsuarioId(@PathVariable Long usuarioId) {
         List<EntityModel<SoporteDTO>> tickets = soporteService.findByUsuarioId(usuarioId).stream()
                 .map(assembler::toModel)
                 .collect(Collectors.toList());
 
-        return ResponseEntity.ok(CollectionModel.of(tickets,
-                linkTo(methodOn(SoporteController.class).obtenerPorUsuarioId(usuarioId)).withSelfRel()));
+        return ResponseEntity.ok(CollectionModel.of(
+                tickets,
+                linkTo(methodOn(SoporteController.class).obtenerPorUsuarioId(usuarioId)).withSelfRel()
+        ));
     }
 
-    // 4. OBTENER POR ORDEN ID
+    @Operation(summary = "Buscar tickets por ID de orden")
     @GetMapping("/orden/{ordenId}")
     public ResponseEntity<CollectionModel<EntityModel<SoporteDTO>>> obtenerPorOrdenId(@PathVariable Long ordenId) {
         List<EntityModel<SoporteDTO>> tickets = soporteService.findByOrdenId(ordenId).stream()
                 .map(assembler::toModel)
                 .collect(Collectors.toList());
 
-        return ResponseEntity.ok(CollectionModel.of(tickets,
-                linkTo(methodOn(SoporteController.class).obtenerPorOrdenId(ordenId)).withSelfRel()));
+        return ResponseEntity.ok(CollectionModel.of(
+                tickets,
+                linkTo(methodOn(SoporteController.class).obtenerPorOrdenId(ordenId)).withSelfRel()
+        ));
     }
 
-    // 5. VERIFICAR SI EXISTE POR ID
+    @Operation(summary = "Verificar si un ticket existe")
     @GetMapping("/{id}/exists")
     public ResponseEntity<Boolean> existePorId(@PathVariable Long id) {
-        // Llama al método existeById en tu servicio (o crealo si aún no lo tienes)
         return ResponseEntity.ok(soporteService.existsById(id));
     }
 
-    // 6. CREAR (POST)
+    @Operation(summary = "Crear un nuevo ticket de soporte")
     @PostMapping
     public ResponseEntity<EntityModel<SoporteDTO>> crearTicket(@RequestBody SoporteDTO dto) {
         SoporteDTO nuevoTicket = soporteService.save(dto);
@@ -85,14 +95,17 @@ public class SoporteController {
                 .body(entityModel);
     }
 
-    // 7. ACTUALIZAR (PUT)
+    @Operation(summary = "Actualizar un ticket de soporte")
     @PutMapping("/{id}")
-    public ResponseEntity<EntityModel<SoporteDTO>> actualizarTicket(@PathVariable Long id, @RequestBody SoporteDTO dto) {
+    public ResponseEntity<EntityModel<SoporteDTO>> actualizarTicket(
+            @PathVariable Long id,
+            @RequestBody SoporteDTO dto
+    ) {
         SoporteDTO ticketActualizado = soporteService.update(id, dto);
         return ResponseEntity.ok(assembler.toModel(ticketActualizado));
     }
 
-    // 8. ELIMINAR (DELETE)
+    @Operation(summary = "Eliminar un ticket de soporte")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminarTicket(@PathVariable Long id) {
         soporteService.deleteById(id);
