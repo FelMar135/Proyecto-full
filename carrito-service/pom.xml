@@ -142,8 +142,6 @@
                 <configuration>
                     <excludes>
                         <exclude>com/example/carrito_service/config/**</exclude>
-                        <exclude>com/example/carrito_service/exception/**</exclude>
-                        <exclude>com/example/carrito_service/dto/**</exclude>
                         <exclude>com/example/carrito_service/CarritoServiceApplication.class</exclude>
                     </excludes>
                 </configuration>
