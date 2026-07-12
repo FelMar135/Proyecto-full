@@ -139,9 +139,7 @@
             <configuration>
                 <excludes>
                     <exclude>com/example/user_service/config/**</exclude>
-                    <exclude>com/example/user_service/exception/**</exclude>
                     <exclude>com/example/user_service/dto/**</exclude>
-                    <exclude>com/example/user_service/UserServiceApplication.class</exclude>
                 </excludes>
             </configuration>
 
