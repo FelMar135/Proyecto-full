@@ -149,7 +149,7 @@ GPU Store es una plataforma de comercio electrónico orientada a la venta de com
 | `DELETE`| `/usuarios/{id}` | Elimina el perfil de un usuario de la base de datos. |
 
 ##  Enlaces Swagger
-http://localhost:9090/swagger-ui/index.html (ver todos)
+http://localhost:9090/webjars/swagger-ui/index.html (ver todos)
 http://localhost:9091/swagger-ui/index.html
 http://localhost:9092/swagger-ui/index.html
 http://localhost:9093/swagger-ui/index.html
